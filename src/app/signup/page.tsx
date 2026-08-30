@@ -1,211 +1,170 @@
 ﻿'use client'
 
 import { useState } from 'react'
-import Link from 'next/link'
 import { useRouter } from 'next/navigation'
+import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
-import { Flame, AlertCircle, CheckCircle2 } from 'lucide-react'
+import { Flame, Lock, Mail, User, Sparkles, AlertCircle, Check } from 'lucide-react'
 
-export default function SignupPage() {
+export default function SignUpPage() {
   const router = useRouter()
+  const supabase = createClient()
 
-  const [username, setUsername] = useState('')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
-  const [confirmPassword, setConfirmPassword] = useState('')
+  const [username, setUsername] = useState('')
+  const [loading, setLoading] = useState(false)
   const [errorMsg, setErrorMsg] = useState<string | null>(null)
   const [successMsg, setSuccessMsg] = useState<string | null>(null)
-  const [loading, setLoading] = useState(false)
 
-  const handleSignup = async (e: React.FormEvent) => {
+  const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault()
+    if (!email || !password || !username) return
+
+    setLoading(true)
     setErrorMsg(null)
     setSuccessMsg(null)
 
-    // Form Validations
-    const cleanUsername = username.trim().toLowerCase()
-    if (!cleanUsername || cleanUsername.length < 3) {
-      setErrorMsg('Username must be at least 3 characters long.')
-      return
-    }
-
-    if (!email.trim() || !email.includes('@')) {
-      setErrorMsg('That email doesn’t look quite right.')
-      return
-    }
-
-    if (password.length < 6) {
-      setErrorMsg('Password must be at least 6 characters.')
-      return
-    }
-
-    if (password !== confirmPassword) {
-      setErrorMsg("Those passwords aren't choosing the same team.")
-      return
-    }
-
-    setLoading(true)
-    const supabase = createClient()
-
     try {
-      // 1. Check if username is already taken in profiles table
-      const { data: existingProfile } = await supabase
-        .from('profiles')
-        .select('username')
-        .eq('username', cleanUsername)
-        .maybeSingle()
-
-      if (existingProfile) {
-        setErrorMsg('Looks like this chaos agent already exists.')
-        setLoading(false)
-        return
-      }
-
-      // 2. Call Supabase Auth signUp
       const { data, error } = await supabase.auth.signUp({
         email: email.trim(),
         password,
         options: {
           data: {
-            username: cleanUsername,
+            username: username.trim().toLowerCase(),
             display_name: username.trim(),
+            avatar_url: '/avatars/avatar-01.png',
           },
         },
       })
 
       if (error) {
-        if (
-          error.message.toLowerCase().includes('already registered') ||
-          error.message.toLowerCase().includes('already exists')
-        ) {
-          setErrorMsg('Looks like this chaos agent already exists.')
+        if (error.message.includes('already registered')) {
+          setErrorMsg('An account with this email already exists.')
         } else {
-          setErrorMsg(error.message)
+          setErrorMsg(error.message || 'Could not create account.')
         }
-        return
-      }
-
-      if (data.session) {
-        // Direct authenticated session established (email confirmation disabled/auto-confirmed)
-        router.push('/play')
-        router.refresh()
-      } else if (data.user && !data.session) {
-        // Email confirmation is required by Supabase Auth config
-        setSuccessMsg(
-          'Chaos ID created! Please check your email inbox to confirm your account before logging in.'
-        )
+      } else {
+        setSuccessMsg('Account created! Welcome to Choose Your Chaos.')
+        setTimeout(() => {
+          router.push('/')
+          router.refresh()
+        }, 1200)
       }
     } catch {
-      setErrorMsg('Failed to create account due to a chaos glitch. Please try again.')
+      setErrorMsg('Failed to connect to the server. Please try again.')
     } finally {
       setLoading(false)
     }
   }
 
   return (
-    <div className="min-h-[calc(100vh-4rem)] flex items-center justify-center p-4">
-      <div className="w-full max-w-md bg-neutral-900 border border-neutral-800 rounded-2xl p-6 sm:p-8 shadow-2xl relative overflow-hidden">
-        {/* Background glow */}
-        <div className="absolute top-0 right-0 w-40 h-40 bg-purple-500/10 rounded-full blur-3xl -z-10" />
-        <div className="absolute bottom-0 left-0 w-40 h-40 bg-yellow-500/10 rounded-full blur-3xl -z-10" />
+    <div className="min-h-[calc(100vh-4rem)] flex items-center justify-center px-4 py-12 relative overflow-hidden">
+      {/* Subtle Background Glows */}
+      <div className="absolute top-1/3 right-1/4 w-96 h-96 bg-purple-600/15 rounded-full blur-3xl -z-10 pointer-events-none" />
+      <div className="absolute bottom-10 left-10 w-64 h-64 bg-pink-500/10 rounded-full blur-3xl -z-10 pointer-events-none" />
 
-        <div className="text-center mb-6">
-          <div className="inline-flex p-3 bg-neutral-800/80 rounded-2xl border border-neutral-700 mb-3 shadow-inner">
-            <Flame className="w-8 h-8 text-yellow-400" />
+      <div className="w-full max-w-lg bg-neutral-900/90 backdrop-blur-xl border border-neutral-800 rounded-3xl p-6 sm:p-10 shadow-2xl animate-pop-in">
+        {/* Header */}
+        <div className="text-center mb-8">
+          <div className="w-14 h-14 rounded-3xl bg-gradient-to-tr from-purple-600 via-pink-500 to-yellow-400 p-0.5 mx-auto mb-4 shadow-xl shadow-purple-600/30 animate-spotlight-glow">
+            <div className="w-full h-full bg-neutral-950 rounded-[22px] flex items-center justify-center">
+              <Sparkles className="w-7 h-7 text-yellow-400" />
+            </div>
           </div>
-          <h1 className="text-2xl font-black text-white tracking-tight">JOIN THE CHAOS</h1>
-          <p className="text-sm text-neutral-400 mt-1">Claim your identity in the arena</p>
+
+          <h1 className="text-2xl sm:text-3xl font-black text-white tracking-tight">
+            CREATE YOUR <span className="text-transparent bg-clip-text bg-gradient-to-r from-purple-400 via-pink-400 to-yellow-400">CHAOS IDENTITY</span>
+          </h1>
+          <p className="text-xs text-neutral-400 mt-2 font-medium">
+            Join the multiplayer arena and claim your squad rank. 💀
+          </p>
         </div>
 
         {errorMsg && (
-          <div className="mb-5 p-3.5 bg-red-950/50 border border-red-800/70 rounded-xl text-red-300 text-sm flex items-start gap-2.5">
-            <AlertCircle className="w-5 h-5 text-red-400 shrink-0 mt-0.5" />
+          <div className="mb-6 p-4 bg-red-950/60 border border-red-800/80 rounded-2xl text-red-300 text-xs flex items-center gap-2.5 animate-shake">
+            <AlertCircle className="w-4 h-4 shrink-0" />
             <span>{errorMsg}</span>
           </div>
         )}
 
         {successMsg && (
-          <div className="mb-5 p-3.5 bg-emerald-950/50 border border-emerald-800/70 rounded-xl text-emerald-300 text-sm flex items-start gap-2.5">
-            <CheckCircle2 className="w-5 h-5 text-emerald-400 shrink-0 mt-0.5" />
+          <div className="mb-6 p-4 bg-emerald-950/60 border border-emerald-800/80 rounded-2xl text-emerald-300 text-xs flex items-center gap-2.5 animate-bounce">
+            <Check className="w-4 h-4 text-emerald-400 shrink-0" />
             <span>{successMsg}</span>
           </div>
         )}
 
-        <form onSubmit={handleSignup} className="space-y-4">
+        <form onSubmit={handleSignUp} className="space-y-4">
           <div>
-            <label className="block text-xs font-bold uppercase tracking-wider text-neutral-300 mb-1.5">
+            <label className="block text-xs font-black uppercase tracking-wider text-neutral-300 mb-1.5">
               Chaos Username
             </label>
-            <input
-              type="text"
-              value={username}
-              onChange={(e) => setUsername(e.target.value)}
-              placeholder="chaos_master_99"
-              disabled={loading}
-              className="w-full bg-neutral-950 border border-neutral-800 rounded-xl px-4 py-3 text-white text-sm focus:outline-none focus:border-yellow-400 transition-colors disabled:opacity-50"
-              required
-            />
+            <div className="relative">
+              <User className="w-4 h-4 text-neutral-500 absolute left-3.5 top-3.5" />
+              <input
+                type="text"
+                required
+                value={username}
+                onChange={(e) => setUsername(e.target.value)}
+                placeholder="AgentChaos"
+                maxLength={20}
+                className="w-full bg-neutral-950 border border-neutral-800 rounded-2xl pl-10 pr-4 py-3 text-white text-sm focus:outline-none focus:border-purple-500 transition-colors"
+              />
+            </div>
           </div>
 
           <div>
-            <label className="block text-xs font-bold uppercase tracking-wider text-neutral-300 mb-1.5">
+            <label className="block text-xs font-black uppercase tracking-wider text-neutral-300 mb-1.5">
               Email Address
             </label>
-            <input
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              placeholder="agent@chaos.io"
-              disabled={loading}
-              className="w-full bg-neutral-950 border border-neutral-800 rounded-xl px-4 py-3 text-white text-sm focus:outline-none focus:border-yellow-400 transition-colors disabled:opacity-50"
-              required
-            />
+            <div className="relative">
+              <Mail className="w-4 h-4 text-neutral-500 absolute left-3.5 top-3.5" />
+              <input
+                type="email"
+                required
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="chaosagent@example.com"
+                className="w-full bg-neutral-950 border border-neutral-800 rounded-2xl pl-10 pr-4 py-3 text-white text-sm focus:outline-none focus:border-purple-500 transition-colors"
+              />
+            </div>
           </div>
 
           <div>
-            <label className="block text-xs font-bold uppercase tracking-wider text-neutral-300 mb-1.5">
+            <label className="block text-xs font-black uppercase tracking-wider text-neutral-300 mb-1.5">
               Password
             </label>
-            <input
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              placeholder="••••••••"
-              disabled={loading}
-              className="w-full bg-neutral-950 border border-neutral-800 rounded-xl px-4 py-3 text-white text-sm focus:outline-none focus:border-yellow-400 transition-colors disabled:opacity-50"
-              required
-            />
-          </div>
-
-          <div>
-            <label className="block text-xs font-bold uppercase tracking-wider text-neutral-300 mb-1.5">
-              Confirm Password
-            </label>
-            <input
-              type="password"
-              value={confirmPassword}
-              onChange={(e) => setConfirmPassword(e.target.value)}
-              placeholder="••••••••"
-              disabled={loading}
-              className="w-full bg-neutral-950 border border-neutral-800 rounded-xl px-4 py-3 text-white text-sm focus:outline-none focus:border-yellow-400 transition-colors disabled:opacity-50"
-              required
-            />
+            <div className="relative">
+              <Lock className="w-4 h-4 text-neutral-500 absolute left-3.5 top-3.5" />
+              <input
+                type="password"
+                required
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder="••••••••••••"
+                minLength={6}
+                className="w-full bg-neutral-950 border border-neutral-800 rounded-2xl pl-10 pr-4 py-3 text-white text-sm focus:outline-none focus:border-purple-500 transition-colors"
+              />
+            </div>
           </div>
 
           <button
             type="submit"
             disabled={loading}
-            className="w-full py-3.5 px-4 bg-yellow-400 hover:bg-yellow-300 text-neutral-950 font-black tracking-wide rounded-xl shadow-lg shadow-yellow-500/20 transition-all transform active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer mt-2"
+            className="w-full py-4 bg-gradient-to-r from-purple-600 via-pink-600 to-yellow-400 hover:opacity-95 text-white font-black text-sm uppercase tracking-wider rounded-2xl shadow-xl shadow-purple-600/25 transition-all transform active:scale-95 disabled:opacity-50 cursor-pointer flex items-center justify-center gap-2 mt-2"
           >
-            {loading ? 'CREATING YOUR CHAOS ID...' : 'ENTER THE CHAOS'}
+            {loading ? 'CREATING AGENT...' : 'CREATE IDENTITY & PLAY 🚀'}
           </button>
         </form>
 
-        <div className="mt-6 text-center text-sm text-neutral-400">
-          Already have an identity?{' '}
-          <Link href="/login" className="text-yellow-400 hover:underline font-bold">
-            Login
-          </Link>
+        <div className="mt-8 pt-6 border-t border-neutral-800/80 text-center">
+          <p className="text-xs text-neutral-400">
+            Already have a Chaos account?{' '}
+            <Link href="/login" className="text-yellow-400 hover:underline font-bold">
+              Log In
+            </Link>
+          </p>
         </div>
       </div>
     </div>

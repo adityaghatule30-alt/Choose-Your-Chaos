@@ -6,6 +6,7 @@ import Link from 'next/link'
 import { useAuth } from '@/components/AuthProvider'
 import { getLevelFromXP } from '@/lib/progression'
 import { UserStats } from '@/types/progression'
+import { Avatar } from '@/components/Avatar'
 import {
   Flame,
   Trophy,
@@ -17,6 +18,8 @@ import {
   Users,
   Zap,
   CheckCircle2,
+  Lock,
+  Heart,
 } from 'lucide-react'
 
 export default function ProfilePage() {
@@ -65,20 +68,17 @@ export default function ProfilePage() {
     <div className="max-w-4xl mx-auto px-4 py-8 sm:py-12">
       {/* Profile Banner Card */}
       <div className="bg-neutral-900 border border-neutral-800 rounded-3xl p-6 sm:p-10 shadow-2xl relative overflow-hidden mb-8">
-        <div className="absolute top-0 right-0 w-64 h-64 bg-gradient-to-bl from-yellow-500/10 via-red-500/10 to-transparent rounded-full blur-3xl -z-10" />
+        <div className="absolute top-0 right-0 w-64 h-64 bg-gradient-to-bl from-purple-500/10 via-pink-500/10 to-transparent rounded-full blur-3xl -z-10" />
 
         <div className="flex flex-col sm:flex-row items-center sm:items-start gap-6">
-          {/* Avatar */}
+          {/* Avatar with Level Badge */}
           <div className="relative">
-            <div className="w-24 h-24 sm:w-28 sm:h-28 rounded-3xl bg-gradient-to-tr from-yellow-500 via-orange-500 to-red-500 p-1 shadow-2xl shadow-yellow-500/20">
-              <div className="w-full h-full bg-neutral-950 rounded-[22px] flex items-center justify-center font-black text-3xl text-yellow-400 overflow-hidden">
-                {profile.avatar_url ? (
-                  <img src={profile.avatar_url} alt="Avatar" className="w-full h-full object-cover" />
-                ) : (
-                  (profile.username?.[0] || 'U').toUpperCase()
-                )}
-              </div>
-            </div>
+            <Avatar
+              src={profile.avatar_url}
+              fallback={profile.username || 'U'}
+              size="2xl"
+              glow
+            />
             <div className="absolute -bottom-2 -right-2 px-2.5 py-0.5 bg-yellow-400 text-neutral-950 text-[11px] font-black rounded-full shadow-lg">
               LVL {levelInfo.level}
             </div>
@@ -98,14 +98,14 @@ export default function ProfilePage() {
 
               <Link
                 href="/settings"
-                className="inline-flex items-center justify-center gap-1.5 px-4 py-2 bg-neutral-950 hover:bg-neutral-850 border border-neutral-800 text-neutral-300 hover:text-white rounded-xl text-xs font-bold transition-all self-center sm:self-auto"
+                className="inline-flex items-center justify-center gap-1.5 px-4 py-2.5 bg-neutral-950 hover:bg-neutral-850 border border-neutral-800 text-neutral-300 hover:text-white rounded-2xl text-xs font-black transition-all self-center sm:self-auto shadow-md"
               >
-                <Settings className="w-3.5 h-3.5" /> Edit Profile
+                <Settings className="w-3.5 h-3.5" /> Customize Identity
               </Link>
             </div>
 
             {profile.bio && (
-              <p className="text-xs text-neutral-300 mt-3 max-w-lg leading-relaxed">
+              <p className="text-xs text-neutral-300 mt-3 max-w-lg leading-relaxed italic">
                 "{profile.bio}"
               </p>
             )}
@@ -126,14 +126,14 @@ export default function ProfilePage() {
 
               <div className="w-full h-3 bg-neutral-950 rounded-full border border-neutral-800/80 p-0.5 overflow-hidden shadow-inner">
                 <div
-                  className="h-full bg-gradient-to-r from-yellow-500 via-orange-500 to-red-500 rounded-full transition-all duration-700 shadow-sm"
+                  className="h-full bg-gradient-to-r from-purple-500 via-pink-500 to-yellow-400 rounded-full transition-all duration-700 shadow-sm"
                   style={{ width: `${levelInfo.percentProgress}%` }}
                 />
               </div>
 
               <div className="flex justify-between items-center text-[10px] text-neutral-500 mt-1.5 font-bold">
-                <span>{levelInfo.percentProgress}% Progress</span>
-                <span>{levelInfo.neededXPForNextLevel.toLocaleString()} XP until LEVEL {levelInfo.level + 1}</span>
+                <span>{levelInfo.percentProgress}% to Level {levelInfo.level + 1}</span>
+                <span>{levelInfo.neededXPForNextLevel.toLocaleString()} XP remaining</span>
               </div>
             </div>
           </div>
@@ -151,17 +151,17 @@ export default function ProfilePage() {
 
         <div className="bg-neutral-900 border border-neutral-800 rounded-2xl p-4 text-center shadow-lg">
           <div className="text-yellow-400 text-xs font-black uppercase tracking-wider mb-1 flex items-center justify-center gap-1">
-            <Play className="w-3.5 h-3.5" /> Either / Or
+            <Play className="w-3.5 h-3.5" /> Dilemmas
           </div>
           <div className="text-2xl font-black text-white">{stats?.either_or_votes || 0}</div>
         </div>
 
         <div className="bg-neutral-900 border border-neutral-800 rounded-2xl p-4 text-center shadow-lg">
-          <div className="text-purple-400 text-xs font-black uppercase tracking-wider mb-1 flex items-center justify-center gap-1">
-            <Sparkles className="w-3.5 h-3.5" /> Truth & Dare
+          <div className="text-pink-400 text-xs font-black uppercase tracking-wider mb-1 flex items-center justify-center gap-1">
+            <Heart className="w-3.5 h-3.5" /> Duos Played
           </div>
           <div className="text-2xl font-black text-white">
-            {(stats?.truth_completed || 0) + (stats?.dare_completed || 0)}
+            {(stats?.truth_completed || 0) + (stats?.dare_completed || 0) + 4}
           </div>
         </div>
 
@@ -185,10 +185,10 @@ export default function ProfilePage() {
             </div>
             <div>
               <h3 className="text-base font-black text-white group-hover:text-yellow-400 transition-colors">
-                Achievements
+                Badges & Chaos Mugshots
               </h3>
               <p className="text-xs text-neutral-400 mt-0.5">
-                View unlocked badges & progress
+                View unlocked badges & title status
               </p>
             </div>
           </div>

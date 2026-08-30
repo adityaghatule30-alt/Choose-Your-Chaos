@@ -1,37 +1,26 @@
 ﻿'use client'
 
-import { useState, Suspense } from 'react'
+import { useState } from 'react'
+import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { useRouter, useSearchParams } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
-import { Flame, AlertCircle } from 'lucide-react'
+import { Flame, Lock, Mail, Sparkles, ArrowRight, AlertCircle } from 'lucide-react'
 
-function LoginForm() {
+export default function LoginPage() {
   const router = useRouter()
-  const searchParams = useSearchParams()
-  const redirectTo = searchParams.get('redirectTo') || '/play'
+  const supabase = createClient()
 
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
-  const [errorMsg, setErrorMsg] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
+  const [errorMsg, setErrorMsg] = useState<string | null>(null)
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
-    setErrorMsg(null)
-
-    if (!email.trim()) {
-      setErrorMsg('That email doesn’t look quite right.')
-      return
-    }
-
-    if (!password) {
-      setErrorMsg('Password is required to enter the chaos.')
-      return
-    }
+    if (!email || !password) return
 
     setLoading(true)
-    const supabase = createClient()
+    setErrorMsg(null)
 
     try {
       const { error } = await supabase.auth.signInWithPassword({
@@ -40,107 +29,107 @@ function LoginForm() {
       })
 
       if (error) {
-        if (
-          error.message.toLowerCase().includes('invalid login credentials') ||
-          error.message.toLowerCase().includes('invalid credentials')
-        ) {
-          setErrorMsg("Those credentials didn't survive the chaos. 💀")
-        } else if (error.message.toLowerCase().includes('email not confirmed')) {
-          setErrorMsg('Please confirm your email address to enter the chaos.')
+        if (error.message.includes('Invalid login credentials')) {
+          setErrorMsg('Invalid email or password. Please check your credentials.')
+        } else if (error.message.includes('Email not confirmed')) {
+          setErrorMsg('Please confirm your email address before logging in.')
         } else {
-          setErrorMsg(error.message)
+          setErrorMsg('Failed to log in. Please try again.')
         }
-        return
+      } else {
+        router.push('/')
+        router.refresh()
       }
-
-      router.push(redirectTo)
-      router.refresh()
     } catch {
-      setErrorMsg("An unexpected glitch occurred in the chaos. Try again.")
+      setErrorMsg('Network error. Could not connect to the chaos servers.')
     } finally {
       setLoading(false)
     }
   }
 
   return (
-    <div className="w-full max-w-md bg-neutral-900 border border-neutral-800 rounded-2xl p-6 sm:p-8 shadow-2xl relative overflow-hidden">
-      {/* Background glow */}
-      <div className="absolute top-0 right-0 w-40 h-40 bg-yellow-500/10 rounded-full blur-3xl -z-10" />
-      <div className="absolute bottom-0 left-0 w-40 h-40 bg-red-500/10 rounded-full blur-3xl -z-10" />
+    <div className="min-h-[calc(100vh-4rem)] flex items-center justify-center px-4 py-12 relative overflow-hidden">
+      {/* Subtle Background Glows */}
+      <div className="absolute top-1/4 left-1/2 -translate-x-1/2 w-96 h-96 bg-purple-600/15 rounded-full blur-3xl -z-10 pointer-events-none" />
+      <div className="absolute bottom-10 right-10 w-64 h-64 bg-pink-500/10 rounded-full blur-3xl -z-10 pointer-events-none" />
 
-      <div className="text-center mb-6">
-        <div className="inline-flex p-3 bg-neutral-800/80 rounded-2xl border border-neutral-700 mb-3 shadow-inner">
-          <Flame className="w-8 h-8 text-yellow-400" />
-        </div>
-        <h1 className="text-2xl font-black text-white tracking-tight">WELCOME BACK</h1>
-        <p className="text-sm text-neutral-400 mt-1">Ready to embrace more chaos?</p>
-      </div>
+      <div className="w-full max-w-md bg-neutral-900/90 backdrop-blur-xl border border-neutral-800 rounded-3xl p-6 sm:p-10 shadow-2xl animate-pop-in">
+        {/* Header */}
+        <div className="text-center mb-8">
+          <div className="w-14 h-14 rounded-3xl bg-gradient-to-tr from-purple-600 via-pink-500 to-yellow-400 p-0.5 mx-auto mb-4 shadow-xl shadow-purple-600/30 animate-spotlight-glow">
+            <div className="w-full h-full bg-neutral-950 rounded-[22px] flex items-center justify-center">
+              <Flame className="w-7 h-7 text-yellow-400" />
+            </div>
+          </div>
 
-      {errorMsg && (
-        <div className="mb-5 p-3.5 bg-red-950/50 border border-red-800/70 rounded-xl text-red-300 text-sm flex items-start gap-2.5">
-          <AlertCircle className="w-5 h-5 text-red-400 shrink-0 mt-0.5" />
-          <span>{errorMsg}</span>
-        </div>
-      )}
-
-      <form onSubmit={handleLogin} className="space-y-4">
-        <div>
-          <label className="block text-xs font-bold uppercase tracking-wider text-neutral-300 mb-1.5">
-            Email Address
-          </label>
-          <input
-            type="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            placeholder="agent@chaos.io"
-            disabled={loading}
-            className="w-full bg-neutral-950 border border-neutral-800 rounded-xl px-4 py-3 text-white text-sm focus:outline-none focus:border-yellow-400 transition-colors disabled:opacity-50"
-            required
-          />
+          <h1 className="text-2xl sm:text-3xl font-black text-white tracking-tight">
+            CHOOSE YOUR <span className="text-transparent bg-clip-text bg-gradient-to-r from-purple-400 via-pink-400 to-yellow-400">CHAOS</span>
+          </h1>
+          <p className="text-xs text-neutral-400 mt-2 font-medium">
+            Ready to make questionable decisions? 💀
+          </p>
         </div>
 
-        <div>
-          <div className="flex justify-between items-center mb-1.5">
-            <label className="block text-xs font-bold uppercase tracking-wider text-neutral-300">
+        {errorMsg && (
+          <div className="mb-6 p-4 bg-red-950/60 border border-red-800/80 rounded-2xl text-red-300 text-xs flex items-center gap-2.5 animate-shake">
+            <AlertCircle className="w-4 h-4 shrink-0" />
+            <span>{errorMsg}</span>
+          </div>
+        )}
+
+        <form onSubmit={handleLogin} className="space-y-4">
+          <div>
+            <label className="block text-xs font-black uppercase tracking-wider text-neutral-300 mb-1.5">
+              Email Address
+            </label>
+            <div className="relative">
+              <Mail className="w-4 h-4 text-neutral-500 absolute left-3.5 top-3.5" />
+              <input
+                type="email"
+                required
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="chaosagent@example.com"
+                className="w-full bg-neutral-950 border border-neutral-800 rounded-2xl pl-10 pr-4 py-3 text-white text-sm focus:outline-none focus:border-purple-500 transition-colors"
+              />
+            </div>
+          </div>
+
+          <div>
+            <label className="block text-xs font-black uppercase tracking-wider text-neutral-300 mb-1.5">
               Password
             </label>
+            <div className="relative">
+              <Lock className="w-4 h-4 text-neutral-500 absolute left-3.5 top-3.5" />
+              <input
+                type="password"
+                required
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder="••••••••••••"
+                className="w-full bg-neutral-950 border border-neutral-800 rounded-2xl pl-10 pr-4 py-3 text-white text-sm focus:outline-none focus:border-purple-500 transition-colors"
+              />
+            </div>
           </div>
-          <input
-            type="password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            placeholder="••••••••"
+
+          <button
+            type="submit"
             disabled={loading}
-            className="w-full bg-neutral-950 border border-neutral-800 rounded-xl px-4 py-3 text-white text-sm focus:outline-none focus:border-yellow-400 transition-colors disabled:opacity-50"
-            required
-          />
+            className="w-full py-4 bg-gradient-to-r from-purple-600 via-pink-600 to-yellow-400 hover:opacity-95 text-white font-black text-sm uppercase tracking-wider rounded-2xl shadow-xl shadow-purple-600/25 transition-all transform active:scale-95 disabled:opacity-50 cursor-pointer flex items-center justify-center gap-2 mt-2"
+          >
+            {loading ? 'ENTERING THE ARENA...' : 'LOGIN TO THE CHAOS 🚀'}
+          </button>
+        </form>
+
+        <div className="mt-8 pt-6 border-t border-neutral-800/80 text-center">
+          <p className="text-xs text-neutral-400">
+            Don't have a Chaos ID yet?{' '}
+            <Link href="/signup" className="text-yellow-400 hover:underline font-bold">
+              Sign Up Free
+            </Link>
+          </p>
         </div>
-
-        <button
-          type="submit"
-          disabled={loading}
-          className="w-full py-3.5 px-4 bg-yellow-400 hover:bg-yellow-300 text-neutral-950 font-black tracking-wide rounded-xl shadow-lg shadow-yellow-500/20 transition-all transform active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer mt-2"
-        >
-          {loading ? 'ENTERING THE CHAOS... 💀' : 'LOGIN TO CHAOS'}
-        </button>
-      </form>
-
-      <div className="mt-6 text-center text-sm text-neutral-400">
-        New to the game?{' '}
-        <Link href="/signup" className="text-yellow-400 hover:underline font-bold">
-          Create your Chaos ID
-        </Link>
       </div>
-    </div>
-  )
-}
-
-export default function LoginPage() {
-  return (
-    <div className="min-h-[calc(100vh-4rem)] flex items-center justify-center p-4">
-      <Suspense fallback={<div className="text-neutral-400">Loading...</div>}>
-        <LoginForm />
-      </Suspense>
     </div>
   )
 }

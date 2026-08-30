@@ -1,4 +1,4 @@
-import { MetadataRoute } from 'next'
+﻿import { MetadataRoute } from 'next'
 
 export default function robots(): MetadataRoute.Robots {
   const baseUrl = 'https://chooseyourchaos.com'
@@ -8,17 +8,25 @@ export default function robots(): MetadataRoute.Robots {
       userAgent: '*',
       allow: [
         '/',
+        '/games',
+        '/play',
+        '/spotlight',
+        '/judge-me',
+        '/couples',
+        '/couples/memory-lane',
+        '/couples/couple-chaos',
+        '/couples/ship-or-skip',
+        '/rooms',
+        '/leaderboard',
+        '/achievements',
+        '/guide',
         '/about',
+        '/fuel',
         '/faq',
         '/contact',
         '/privacy',
         '/terms',
         '/cookie-policy',
-        '/play',
-        '/spotlight',
-        '/judge-me',
-        '/leaderboard',
-        '/rooms',
       ],
       disallow: [
         '/admin/',
