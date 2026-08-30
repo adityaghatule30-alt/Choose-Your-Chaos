@@ -54,8 +54,6 @@ export default function SpotlightRoomPage({ params }: { params: Promise<{ code: 
   const [skipping, setSkipping] = useState(false)
   const [errorMsg, setErrorMsg] = useState<string | null>(null)
 
-  const spinTimeoutRef = useRef<NodeJS.Timeout | null>(null)
-
   const loadRoomState = async () => {
     try {
       const res = await fetch(`/api/spotlight/state?code=${roomCode}`)
@@ -267,7 +265,7 @@ export default function SpotlightRoomPage({ params }: { params: Promise<{ code: 
 
   if (!room) {
     return (
-      <div className="max-w-md mx-auto px-4 py-16 text-center">
+      <div className="max-w-md mx-auto px-4 py-16 text-center animate-pop-in">
         <h2 className="text-2xl font-black text-white">Room Not Found ??</h2>
         <p className="text-neutral-400 text-xs mt-2 mb-6">
           This room code might have expired or does not exist.
@@ -286,7 +284,7 @@ export default function SpotlightRoomPage({ params }: { params: Promise<{ code: 
   const questions = room.questions || []
 
   return (
-    <div className="max-w-3xl mx-auto px-4 py-8 sm:py-12">
+    <div className="max-w-3xl mx-auto px-4 py-8 sm:py-12 animate-pop-in">
       {/* Top Header */}
       <div className="flex items-center justify-between mb-6">
         <Link
@@ -311,7 +309,7 @@ export default function SpotlightRoomPage({ params }: { params: Promise<{ code: 
       </div>
 
       {errorMsg && (
-        <div className="mb-6 p-4 bg-red-950/60 border border-red-800/80 rounded-2xl text-red-300 text-xs flex items-center gap-2">
+        <div className="mb-6 p-4 bg-red-950/60 border border-red-800/80 rounded-2xl text-red-300 text-xs flex items-center gap-2 animate-shake">
           <AlertCircle className="w-4 h-4 shrink-0" />
           <span>{errorMsg}</span>
         </div>
@@ -319,11 +317,11 @@ export default function SpotlightRoomPage({ params }: { params: Promise<{ code: 
 
       {/* 1. LOBBY STATE */}
       {room.status === 'lobby' && (
-        <div className="bg-neutral-900 border border-neutral-800 rounded-3xl p-6 sm:p-10 shadow-2xl relative overflow-hidden text-center mb-8">
+        <div className="bg-neutral-900 border border-neutral-800 rounded-3xl p-6 sm:p-10 shadow-2xl relative overflow-hidden text-center mb-8 animate-pop-in">
           <div className="absolute top-0 right-0 w-48 h-48 bg-orange-500/10 rounded-full blur-3xl -z-10" />
 
           <div className="inline-flex p-3 bg-orange-950/60 border border-orange-800 rounded-2xl mb-3 shadow-inner">
-            <Flame className="w-8 h-8 text-orange-500" />
+            <Flame className="w-8 h-8 text-orange-500 animate-pulse" />
           </div>
           <h1 className="text-2xl sm:text-4xl font-black text-white tracking-tight mb-2">
             CHAOS SPOTLIGHT
@@ -345,10 +343,10 @@ export default function SpotlightRoomPage({ params }: { params: Promise<{ code: 
               {room.members?.map((m) => (
                 <div
                   key={m.id}
-                  className="p-3.5 bg-neutral-950/60 border border-neutral-800 rounded-2xl flex items-center justify-between"
+                  className="p-3.5 bg-neutral-950/60 border border-neutral-800 rounded-2xl flex items-center justify-between transition-all hover:scale-[1.01]"
                 >
                   <div className="flex items-center gap-2.5">
-                    <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-orange-500 to-red-500 flex items-center justify-center font-bold text-xs text-neutral-950">
+                    <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-orange-500 to-red-500 flex items-center justify-center font-bold text-xs text-neutral-950 shadow">
                       {m.display_name[0]?.toUpperCase()}
                     </div>
                     <span className="text-sm font-bold text-white truncate max-w-[140px]">
@@ -409,15 +407,15 @@ export default function SpotlightRoomPage({ params }: { params: Promise<{ code: 
       {/* 3. ACTIVE SPOTLIGHT REVEAL & GAMEPLAY */}
       {room.status === 'questioning' && !spinning && (
         <div className="space-y-6">
-          {/* Spotlight Hero Card */}
-          <div className="bg-neutral-900 border border-neutral-800 rounded-3xl p-6 sm:p-10 shadow-2xl relative overflow-hidden text-center">
+          {/* Spotlight Hero Card with Dramatic Glow */}
+          <div className="bg-neutral-900 border border-neutral-800 rounded-3xl p-6 sm:p-10 shadow-2xl relative overflow-hidden text-center animate-slide-up">
             <div className="absolute top-0 right-0 w-64 h-64 bg-orange-500/15 rounded-full blur-3xl -z-10" />
 
-            <div className="inline-flex items-center gap-2 px-3 py-1 bg-orange-950/80 border border-orange-800/80 text-orange-400 text-xs font-bold rounded-full uppercase tracking-wider mb-3">
+            <div className="inline-flex items-center gap-2 px-3 py-1 bg-orange-950/80 border border-orange-800/80 text-orange-400 text-xs font-bold rounded-full uppercase tracking-wider mb-3 shadow-md">
               <Flame className="w-3.5 h-3.5 text-orange-500 animate-pulse" /> THE SPOTLIGHT HAS LANDED ON
             </div>
 
-            <div className="w-20 h-20 rounded-full bg-gradient-to-tr from-orange-400 via-yellow-400 to-red-500 flex items-center justify-center font-black text-2xl text-neutral-950 mx-auto mb-3 shadow-xl ring-4 ring-orange-500/30 animate-bounce">
+            <div className="w-24 h-24 rounded-full bg-gradient-to-tr from-orange-400 via-yellow-400 to-red-500 flex items-center justify-center font-black text-3xl text-neutral-950 mx-auto mb-3 shadow-2xl animate-spotlight-glow ring-4 ring-orange-500/40">
               {spotlightUser?.display_name?.[0]?.toUpperCase() || 'S'}
             </div>
 
@@ -453,7 +451,7 @@ export default function SpotlightRoomPage({ params }: { params: Promise<{ code: 
 
           {/* 4. ASKING VIEW (For everyone EXCEPT spotlight user) */}
           {!isSpotlight && (
-            <div className="bg-neutral-900 border border-neutral-800 rounded-3xl p-6 sm:p-8 shadow-xl">
+            <div className="bg-neutral-900 border border-neutral-800 rounded-3xl p-6 sm:p-8 shadow-xl animate-pop-in">
               <h3 className="text-base font-black text-white mb-3 flex items-center gap-2">
                 <HelpCircle className="w-5 h-5 text-orange-400" />
                 ASK {spotlightUser?.display_name?.toUpperCase() || 'THEM'} ANYTHING ??
@@ -473,7 +471,7 @@ export default function SpotlightRoomPage({ params }: { params: Promise<{ code: 
                   <button
                     type="submit"
                     disabled={submittingQ || !questionText.trim()}
-                    className="px-6 py-3.5 bg-orange-500 hover:bg-orange-400 text-neutral-950 font-black text-xs uppercase tracking-wider rounded-2xl transition-all disabled:opacity-50 cursor-pointer flex items-center gap-1.5 shrink-0 shadow-lg shadow-orange-500/20"
+                    className="px-6 py-3.5 bg-orange-500 hover:bg-orange-400 text-neutral-950 font-black text-xs uppercase tracking-wider rounded-2xl transition-all disabled:opacity-50 cursor-pointer flex items-center gap-1.5 shrink-0 shadow-lg shadow-orange-500/20 active:scale-95"
                   >
                     <Send className="w-4 h-4" /> {submittingQ ? 'SENDING...' : 'ASK ??'}
                   </button>
@@ -490,7 +488,7 @@ export default function SpotlightRoomPage({ params }: { params: Promise<{ code: 
                         key={idx}
                         type="button"
                         onClick={() => setQuestionText(sug)}
-                        className="text-left text-xs bg-neutral-950 hover:bg-neutral-850 border border-neutral-800 rounded-xl px-3 py-1.5 text-neutral-300 transition-colors cursor-pointer"
+                        className="text-left text-xs bg-neutral-950 hover:bg-neutral-850 border border-neutral-800 rounded-xl px-3 py-1.5 text-neutral-300 transition-all hover:scale-105 cursor-pointer"
                       >
                         {sug}
                       </button>
@@ -503,7 +501,7 @@ export default function SpotlightRoomPage({ params }: { params: Promise<{ code: 
 
           {/* 5. SPOTLIGHT PLAYER ANSWERING QUEUE */}
           {isSpotlight && (
-            <div className="bg-neutral-900 border border-neutral-800 rounded-3xl p-6 sm:p-8 shadow-xl">
+            <div className="bg-neutral-900 border border-neutral-800 rounded-3xl p-6 sm:p-8 shadow-xl animate-pop-in">
               <h3 className="text-base font-black text-white mb-2 flex items-center gap-2">
                 <MessageSquare className="w-5 h-5 text-yellow-400" />
                 ANSWER THE SQUAD
@@ -513,7 +511,7 @@ export default function SpotlightRoomPage({ params }: { params: Promise<{ code: 
               </p>
 
               {questions.filter((q) => q.status === 'pending').length === 0 ? (
-                <div className="text-center py-8 bg-neutral-950 rounded-2xl border border-neutral-800 text-neutral-500 text-xs">
+                <div className="text-center py-8 bg-neutral-950 rounded-2xl border border-neutral-800 text-neutral-500 text-xs animate-pulse">
                   Waiting for your squad to submit questions... ??
                 </div>
               ) : (
@@ -523,7 +521,7 @@ export default function SpotlightRoomPage({ params }: { params: Promise<{ code: 
                     .map((q) => (
                       <div
                         key={q.id}
-                        className="p-5 bg-neutral-950 rounded-2xl border border-neutral-800 text-left space-y-3"
+                        className="p-5 bg-neutral-950 rounded-2xl border border-neutral-800 text-left space-y-3 animate-pop-in shadow-md"
                       >
                         <div className="flex items-center justify-between text-xs">
                           <span className="font-bold text-orange-400">Asked by @{q.asker_name}</span>
@@ -549,7 +547,7 @@ export default function SpotlightRoomPage({ params }: { params: Promise<{ code: 
                             <button
                               onClick={() => handleAnswerQuestion(q.id)}
                               disabled={submittingAnswer || !answerText.trim()}
-                              className="flex-1 py-2.5 bg-yellow-400 hover:bg-yellow-300 text-neutral-950 font-black text-xs rounded-xl transition-all cursor-pointer disabled:opacity-50"
+                              className="flex-1 py-2.5 bg-yellow-400 hover:bg-yellow-300 text-neutral-950 font-black text-xs rounded-xl transition-all cursor-pointer disabled:opacity-50 active:scale-95"
                             >
                               SUBMIT ANSWER ??
                             </button>
@@ -586,7 +584,7 @@ export default function SpotlightRoomPage({ params }: { params: Promise<{ code: 
                 {questions.map((q) => (
                   <div
                     key={q.id}
-                    className="p-5 bg-neutral-950/70 border border-neutral-800 rounded-2xl text-left space-y-3"
+                    className="p-5 bg-neutral-950/70 border border-neutral-800 rounded-2xl text-left space-y-3 animate-slide-up shadow-md transition-all"
                   >
                     <div className="flex items-center justify-between text-xs">
                       <span className="font-bold text-neutral-400">@{q.asker_name} asked:</span>
@@ -599,7 +597,7 @@ export default function SpotlightRoomPage({ params }: { params: Promise<{ code: 
 
                     {/* Answer Display */}
                     {q.status === 'answered' && (
-                      <div className="p-3.5 bg-neutral-900/90 border border-neutral-800 rounded-xl">
+                      <div className="p-3.5 bg-neutral-900/90 border border-neutral-800 rounded-xl animate-pop-in">
                         <span className="text-[10px] font-black uppercase text-yellow-400 block mb-1">
                           {spotlightUser?.display_name?.toUpperCase()}'S ANSWER:
                         </span>
@@ -609,25 +607,25 @@ export default function SpotlightRoomPage({ params }: { params: Promise<{ code: 
 
                     {/* Skipped Notice */}
                     {q.status === 'skipped' && (
-                      <div className="p-3 bg-red-950/40 border border-red-900/60 rounded-xl text-xs text-red-300 italic">
+                      <div className="p-3 bg-red-950/40 border border-red-900/60 rounded-xl text-xs text-red-300 italic animate-shake">
                         {q.answer || '?? Used a skip. The allegations remain unanswered.'}
                       </div>
                     )}
 
                     {/* Chaos AI Interruption */}
                     {q.chaos_ai_comment && (
-                      <div className="p-3 bg-purple-950/40 border border-purple-800/80 rounded-xl flex items-start gap-2 text-xs text-purple-300">
-                        <Bot className="w-4 h-4 text-purple-400 shrink-0 mt-0.5" />
+                      <div className="p-3.5 bg-purple-950/40 border border-purple-800/80 rounded-xl flex items-start gap-2.5 text-xs text-purple-300 animate-pop-in shadow-inner">
+                        <Bot className="w-5 h-5 text-purple-400 shrink-0 mt-0.5 animate-bounce" />
                         <div>
                           <span className="font-black text-purple-400 uppercase tracking-wider block text-[10px]">
-                            CHAOS AI COMMENTARY
+                            CHAOS AI INTERRUPT ??
                           </span>
-                          <span>{q.chaos_ai_comment}</span>
+                          <span className="leading-relaxed">{q.chaos_ai_comment}</span>
                         </div>
                       </div>
                     )}
 
-                    {/* Emoji Reaction Bar */}
+                    {/* Emoji Reaction Bar with pop animation */}
                     {q.status === 'answered' && (
                       <div className="flex items-center gap-1.5 flex-wrap pt-1">
                         {EMOJI_REACTIONS.map((emoji) => {
@@ -639,11 +637,13 @@ export default function SpotlightRoomPage({ params }: { params: Promise<{ code: 
                               onClick={() => handleToggleReaction(q.id, emoji)}
                               className={`px-2.5 py-1 rounded-xl text-xs flex items-center gap-1 border transition-all cursor-pointer ${
                                 userReacted
-                                  ? 'bg-neutral-800 border-orange-500/50 text-white'
-                                  : 'bg-neutral-900 border-neutral-800 text-neutral-400 hover:border-neutral-700'
+                                  ? 'bg-neutral-800 border-orange-500/60 text-white shadow-sm ring-2 ring-orange-500/20 scale-105'
+                                  : 'bg-neutral-900 border-neutral-800 text-neutral-400 hover:border-neutral-700 hover:scale-105 active:scale-95'
                               }`}
                             >
-                              <span>{emoji}</span>
+                              <span className={userReacted ? 'animate-reaction-bounce inline-block' : ''}>
+                                {emoji}
+                              </span>
                               {count > 0 && <span className="text-[10px] font-bold">{count}</span>}
                             </button>
                           )
