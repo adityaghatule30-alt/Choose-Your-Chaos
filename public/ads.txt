@@ -1,0 +1,3 @@
+﻿# Choose Your Chaos — ads.txt
+# When your Google AdSense account is approved, add your authorized digital seller record below:
+# Format: google.com, pub-XXXXXXXXXXXXXXXX, DIRECT, f08c47fec0942fa0
