@@ -1,4 +1,4 @@
-﻿import { Metadata } from 'next'
+import { Metadata } from 'next'
 import Link from 'next/link'
 import { Flame, Play, Sparkles, ShieldAlert, Users } from 'lucide-react'
 
@@ -34,12 +34,12 @@ export default function AboutPage() {
         </div>
 
         <div className="p-6 bg-neutral-900 border border-neutral-800 rounded-3xl">
-          <div className="w-10 h-10 rounded-2xl bg-purple-500/10 text-purple-400 flex items-center justify-center mb-3">
-            <Sparkles className="w-5 h-5" />
+          <div className="w-10 h-10 rounded-2xl bg-orange-500/10 text-orange-400 flex items-center justify-center mb-3">
+            <Flame className="w-5 h-5" />
           </div>
-          <h3 className="text-base font-black text-white mb-1">Truth & Dare</h3>
+          <h3 className="text-base font-black text-white mb-1">Chaos Spotlight</h3>
           <p className="text-xs text-neutral-400 leading-relaxed">
-            Filter by Easy, Medium, or Chaos. Reveal deepest secrets or complete hilarious real-life dares with your friends.
+            One player gets randomly chosen. Everyone else asks the questions. Unfiltered interrogation with limited skips and AI commentary.
           </p>
         </div>
 

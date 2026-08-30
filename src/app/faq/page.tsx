@@ -1,4 +1,4 @@
-﻿import { Metadata } from 'next'
+import { Metadata } from 'next'
 import { HelpCircle, Sparkles } from 'lucide-react'
 
 export const metadata: Metadata = {
@@ -16,8 +16,8 @@ const FAQS = [
     a: 'You are presented with two choices (Option A vs Option B). Pick your side to immediately reveal global vote percentages and deterministic funny reactions while earning +5 XP.',
   },
   {
-    q: 'How does Truth or Dare work?',
-    a: 'Select your mode (Truth 🎭 or Dare 😈) and difficulty (Easy, Medium, Chaos). Once you answer or complete the challenge, click "I ANSWERED" or "I DID IT" to earn up to +15 XP.',
+    q: 'How does Chaos Spotlight work?',
+    a: 'A host creates a Spotlight room and spins the wheel. One player is randomly chosen to be in the spotlight, and everyone else asks spicy questions. The chosen player answers or uses limited skips, with live reactions and occasional Chaos AI commentary.',
   },
   {
     q: 'How does the Judge Me court work?',
