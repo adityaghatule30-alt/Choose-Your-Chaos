@@ -22,9 +22,15 @@ export async function GET(request: Request) {
           categories:category_id (id, name, slug, emoji)
         `)
         .eq('id', caseId)
-        .single()
+        .maybeSingle()
 
-      if (error || !item) {
+      if (error) {
+        console.error(`Error querying judge case ${caseId}:`, error)
+        return NextResponse.json({ error: 'DB_ERROR', message: error.message }, { status: 500 })
+      }
+
+      if (!item) {
+        console.warn(`Judge case not found for id: ${caseId}`)
         return NextResponse.json({ error: 'CASE_NOT_FOUND' }, { status: 404 })
       }
 
@@ -49,7 +55,10 @@ export async function GET(request: Request) {
         total,
         percent_not_guilty: total > 0 ? Math.round((not_guilty / total) * 100) : 33,
         percent_guilty: total > 0 ? Math.round((guilty / total) * 100) : 33,
-        percent_criminal: total > 0 ? 100 - (Math.round((not_guilty / total) * 100) + Math.round((guilty / total) * 100)) : 34,
+        percent_criminal:
+          total > 0
+            ? 100 - (Math.round((not_guilty / total) * 100) + Math.round((guilty / total) * 100))
+            : 34,
       }
 
       const userVote = user ? votes?.find((v) => v.user_id === user.id)?.verdict : null
@@ -96,7 +105,8 @@ export async function GET(request: Request) {
     const { data: cases, error } = await query.order('created_at', { ascending: false }).limit(40)
 
     if (error) {
-      return NextResponse.json({ error: 'DB_ERROR' }, { status: 500 })
+      console.error('Error fetching judge cases list:', error)
+      return NextResponse.json({ error: 'DB_ERROR', message: error.message }, { status: 500 })
     }
 
     const caseIds = (cases || []).map((c) => c.id)
@@ -164,14 +174,21 @@ export async function GET(request: Request) {
       sortedCases = casesWithStats.sort((a, b) => {
         const statsA = a.stats
         const statsB = b.stats
-        const varA = statsA && statsA.total > 0 ? 100 - Math.max(statsA.percent_not_guilty, statsA.percent_guilty, statsA.percent_criminal) : 0
-        const varB = statsB && statsB.total > 0 ? 100 - Math.max(statsB.percent_not_guilty, statsB.percent_guilty, statsB.percent_criminal) : 0
+        const varA =
+          statsA && statsA.total > 0
+            ? 100 - Math.max(statsA.percent_not_guilty, statsA.percent_guilty, statsA.percent_criminal)
+            : 0
+        const varB =
+          statsB && statsB.total > 0
+            ? 100 - Math.max(statsB.percent_not_guilty, statsB.percent_guilty, statsB.percent_criminal)
+            : 0
         return varB - varA
       })
     }
 
     return NextResponse.json({ cases: sortedCases })
-  } catch {
+  } catch (err) {
+    console.error('Judge cases GET failed:', err)
     return NextResponse.json({ error: 'SERVER_ERROR' }, { status: 500 })
   }
 }
@@ -210,7 +227,7 @@ export async function POST(request: Request) {
         .from('categories')
         .select('id')
         .eq('slug', category_slug)
-        .single()
+        .maybeSingle()
       if (cat) categoryId = cat.id
     }
 
@@ -223,12 +240,13 @@ export async function POST(request: Request) {
         category_id: categoryId,
         status: 'approved',
       })
-      .select('id, status')
+      .select('id, status, title')
       .single()
 
     if (error) {
+      console.error('Error inserting judge case:', error)
       return NextResponse.json(
-        { error: 'DB_ERROR', message: 'Your case didn’t reach the courtroom. Try again.' },
+        { error: 'DB_ERROR', message: error.message || 'Your case didn’t reach the courtroom. Try again.' },
         { status: 500 }
       )
     }
@@ -238,7 +256,8 @@ export async function POST(request: Request) {
       case: newCase,
       message: 'Case submitted. The court is reviewing your evidence. ⚖️',
     })
-  } catch {
+  } catch (err) {
+    console.error('Judge cases POST failed:', err)
     return NextResponse.json(
       { error: 'SERVER_ERROR', message: 'Your case didn’t reach the courtroom. Try again.' },
       { status: 500 }

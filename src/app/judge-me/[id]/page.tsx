@@ -1,4 +1,4 @@
-﻿'use client'
+'use client'
 
 import { useEffect, useState, use } from 'react'
 import { useRouter } from 'next/navigation'
@@ -49,25 +49,29 @@ export default function CaseDetailPage({ params }: { params: Promise<{ id: strin
   // Load Case & Comments
   const loadCaseDetails = async () => {
     try {
-      const [caseRes, commentsRes] = await Promise.all([
-        fetch(`/api/judge/cases?id=${caseId}`),
-        fetch(`/api/judge/comments?case_id=${caseId}`),
-      ])
-
+      const caseRes = await fetch(`/api/judge/cases?id=${caseId}`)
       const cData = await caseRes.json()
-      const cmData = await commentsRes.json()
 
       if (cData.case) {
         setCaseData(cData.case)
       } else {
-        throw new Error('Case not found.')
+        setErrorMsg(cData.message || 'This case may have been dismissed or removed from public record.')
+        setCaseData(null)
       }
 
-      if (cmData.comments) {
-        setComments(cmData.comments)
+      // Fetch comments gracefully without throwing if comments fail
+      try {
+        const commentsRes = await fetch(`/api/judge/comments?case_id=${caseId}`)
+        const cmData = await commentsRes.json()
+        if (cmData.comments) {
+          setComments(cmData.comments)
+        }
+      } catch (cErr) {
+        console.warn('Could not load comments:', cErr)
       }
-    } catch {
-      setErrorMsg('The courtroom is having a moment. 😭')
+    } catch (err) {
+      console.error('Failed to load case details:', err)
+      setErrorMsg('The courtroom is having a moment. ??')
     } finally {
       setLoading(false)
     }
@@ -103,7 +107,7 @@ export default function CaseDetailPage({ params }: { params: Promise<{ id: strin
 
       if (data.success || data.error === 'DUPLICATE_VOTE') {
         if (data.success && data.xp_awarded) {
-          setXpNotice(`+${data.xp_awarded} XP Awarded! 🔥`)
+          setXpNotice(`+${data.xp_awarded} XP Awarded! ??`)
           refreshProfile()
           setTimeout(() => setXpNotice(null), 3000)
         }
@@ -155,13 +159,13 @@ export default function CaseDetailPage({ params }: { params: Promise<{ id: strin
         setNewCommentText('')
         loadCaseDetails()
         refreshProfile()
-        setXpNotice('+2 XP for Commenting! 🔥')
+        setXpNotice('+2 XP for Commenting! ??')
         setTimeout(() => setXpNotice(null), 3000)
       } else {
-        setErrorMsg(data.message || "The jury's comment box is temporarily broken. 💀")
+        setErrorMsg(data.message || "The jury's comment box is temporarily broken. ??")
       }
     } catch {
-      setErrorMsg("The jury's comment box is temporarily broken. 💀")
+      setErrorMsg("The jury's comment box is temporarily broken. ??")
     } finally {
       setSubmittingComment(false)
     }
@@ -234,11 +238,11 @@ export default function CaseDetailPage({ params }: { params: Promise<{ id: strin
   if (!caseData) {
     return (
       <div className="max-w-2xl mx-auto px-4 py-16 text-center">
-        <h2 className="text-2xl font-black text-white">Case Not Found ⚖️</h2>
+        <h2 className="text-2xl font-black text-white">Case Not Found ??</h2>
         <p className="text-neutral-400 text-xs mt-2 mb-6">
-          This case may have been dismissed or removed from public record.
+          {errorMsg || 'This case may have been dismissed or removed from public record.'}
         </p>
-        <Link href="/judge-me" className="px-6 py-3 bg-red-600 text-white font-bold text-xs rounded-xl">
+        <Link href="/judge-me" className="px-6 py-3 bg-red-600 hover:bg-red-500 text-white font-bold text-xs rounded-xl transition-colors">
           Back to Court Feed
         </Link>
       </div>
@@ -331,7 +335,7 @@ export default function CaseDetailPage({ params }: { params: Promise<{ id: strin
                   : 'bg-neutral-950 hover:bg-neutral-800 border-neutral-800 hover:border-emerald-500 text-emerald-400'
               }`}
             >
-              <div className="text-xs font-black uppercase mb-1">😇 NOT GUILTY</div>
+              <div className="text-xs font-black uppercase mb-1">?? NOT GUILTY</div>
               {hasVoted && caseData.stats && (
                 <div className="text-xl font-black text-white">
                   {caseData.stats.percent_not_guilty}%
@@ -351,7 +355,7 @@ export default function CaseDetailPage({ params }: { params: Promise<{ id: strin
                   : 'bg-neutral-950 hover:bg-neutral-800 border-neutral-800 hover:border-yellow-400 text-yellow-400'
               }`}
             >
-              <div className="text-xs font-black uppercase mb-1">😬 GUILTY</div>
+              <div className="text-xs font-black uppercase mb-1">?? GUILTY</div>
               {hasVoted && caseData.stats && (
                 <div className="text-xl font-black text-white">
                   {caseData.stats.percent_guilty}%
@@ -371,7 +375,7 @@ export default function CaseDetailPage({ params }: { params: Promise<{ id: strin
                   : 'bg-neutral-950 hover:bg-neutral-800 border-neutral-800 hover:border-red-500 text-red-400'
               }`}
             >
-              <div className="text-xs font-black uppercase mb-1">💀 CRIMINAL</div>
+              <div className="text-xs font-black uppercase mb-1">?? CRIMINAL</div>
               {hasVoted && caseData.stats && (
                 <div className="text-xl font-black text-white">
                   {caseData.stats.percent_criminal}%
@@ -420,7 +424,7 @@ export default function CaseDetailPage({ params }: { params: Promise<{ id: strin
         {/* Comments List */}
         {comments.length === 0 ? (
           <div className="text-center py-8 text-neutral-500 text-xs">
-            Nobody has judged this yet. Be the first. 👀
+            Nobody has judged this yet. Be the first. ??
           </div>
         ) : (
           <div className="space-y-4">
@@ -459,7 +463,7 @@ export default function CaseDetailPage({ params }: { params: Promise<{ id: strin
 
                 {/* Reactions bar */}
                 <div className="flex items-center gap-1.5 flex-wrap">
-                  {['😂', '💀', '😭', '🔥', '🤨'].map((emoji) => {
+                  {['??', '??', '??', '??', '??'].map((emoji) => {
                     const count = cm.reactions_count?.[emoji] || 0
                     const userReacted = cm.user_reactions?.includes(emoji)
                     return (
