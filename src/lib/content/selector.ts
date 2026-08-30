@@ -9,6 +9,16 @@ interface SelectorOptions {
   limit?: number
 }
 
+// Fisher-Yates shuffle algorithm
+function shuffleArray<T>(array: T[]): T[] {
+  const shuffled = [...array]
+  for (let i = shuffled.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1))
+    ;[shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]]
+  }
+  return shuffled
+}
+
 export async function selectActiveContent(
   supabase: SupabaseClient,
   userId: string,
@@ -16,18 +26,22 @@ export async function selectActiveContent(
 ): Promise<Question | null> {
   const { categorySlug, difficulty, humorLevel, excludeIds = [] } = options
 
-  // 1. Fetch user's answered question IDs
-  const { data: answeredVotes } = await supabase
-    .from('question_votes')
-    .select('question_id')
-    .eq('user_id', userId)
+  // 1. Fetch user's answered question IDs if userId is valid UUID
+  let answeredIds: string[] = []
+  if (userId && userId !== '00000000-0000-0000-0000-000000000000') {
+    const { data: answeredVotes } = await supabase
+      .from('question_votes')
+      .select('question_id')
+      .eq('user_id', userId)
 
-  const answeredIds = (answeredVotes || []).map((v) => v.question_id)
+    answeredIds = (answeredVotes || []).map((v) => v.question_id)
+  }
+
   const combinedExcludes = Array.from(new Set([...answeredIds, ...excludeIds]))
 
   // 2. Fetch user's profile for preferred humor mode if not explicitly passed
   let preferredHumor = humorLevel
-  if (!preferredHumor) {
+  if (!preferredHumor && userId && userId !== '00000000-0000-0000-0000-000000000000') {
     const { data: profile } = await supabase
       .from('profiles')
       .select('humor_level')
@@ -39,7 +53,9 @@ export async function selectActiveContent(
   // 3. Build query ensuring only active & approved content is selected
   let query = supabase
     .from('questions')
-    .select('id, question, option_a, option_b, category_id, difficulty, humor_level, language, tags, active, usage_count, created_at, content_status, quality_score, safety_score, categories(id, name, slug, emoji)')
+    .select(
+      'id, question, option_a, option_b, category_id, difficulty, humor_level, language, tags, active, usage_count, created_at, content_status, quality_score, safety_score, categories(id, name, slug, emoji)'
+    )
     .eq('active', true)
     .in('content_status', ['approved', 'active'])
 
@@ -51,36 +67,42 @@ export async function selectActiveContent(
     query = query.not('id', 'in', `(${combinedExcludes.join(',')})`)
   }
 
-  const { data: candidates, error } = await query.limit(25)
+  const { data: candidates, error } = await query.limit(50)
 
   if (error || !candidates || candidates.length === 0) {
-    // If pool is exhausted for this user, fallback to any active question
-    if (combinedExcludes.length > 0 && excludeIds.length < 5) {
-      const { data: fallbackQuestions } = await supabase
-        .from('questions')
-        .select('id, question, option_a, option_b, category_id, difficulty, humor_level, language, tags, active, usage_count, created_at, categories(id, name, slug, emoji)')
-        .eq('active', true)
-        .in('content_status', ['approved', 'active'])
-        .limit(10)
+    // If pool is exhausted for this user, fallback to random active questions
+    const { data: fallbackQuestions } = await supabase
+      .from('questions')
+      .select(
+        'id, question, option_a, option_b, category_id, difficulty, humor_level, language, tags, active, usage_count, created_at, categories(id, name, slug, emoji)'
+      )
+      .eq('active', true)
+      .in('content_status', ['approved', 'active'])
+      .limit(50)
 
-      if (fallbackQuestions && fallbackQuestions.length > 0) {
-        const randomIndex = Math.floor(Math.random() * fallbackQuestions.length)
-        return fallbackQuestions[randomIndex] as unknown as Question
-      }
+    if (fallbackQuestions && fallbackQuestions.length > 0) {
+      // Pick a random question not in excludeIds if possible
+      const available = fallbackQuestions.filter((q) => !excludeIds.includes(q.id))
+      const pool = available.length > 0 ? available : fallbackQuestions
+      const picked = pool[Math.floor(Math.random() * pool.length)]
+      return picked as unknown as Question
     }
     return null
   }
 
-  // 4. Weight candidates by humor preference and lower usage count
-  const weighted = [...candidates].sort((a, b) => {
+  // 4. Randomize and shuffle candidates so questions never repeat in predictable order
+  const shuffledCandidates = shuffleArray(candidates)
+
+  // 5. Weight candidates giving high randomness combined with soft humor preference
+  const weighted = shuffledCandidates.sort((a, b) => {
     const scoreA =
-      (a.humor_level === preferredHumor ? 3 : 0) -
-      (a.usage_count || 0) * 0.2 +
-      Math.random() * 2
+      (a.humor_level === preferredHumor ? 1.5 : 0) -
+      (a.usage_count || 0) * 0.05 +
+      Math.random() * 5
     const scoreB =
-      (b.humor_level === preferredHumor ? 3 : 0) -
-      (b.usage_count || 0) * 0.2 +
-      Math.random() * 2
+      (b.humor_level === preferredHumor ? 1.5 : 0) -
+      (b.usage_count || 0) * 0.05 +
+      Math.random() * 5
     return scoreB - scoreA
   })
 
