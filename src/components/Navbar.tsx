@@ -1,4 +1,4 @@
-﻿'use client'
+'use client'
 
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
@@ -54,8 +54,8 @@ export function Navbar() {
           <Link href="/play" className="hover:text-yellow-400 transition-colors flex items-center gap-1.5">
             <Play className="w-4 h-4 text-yellow-400" /> Either / Or
           </Link>
-          <Link href="/truth-or-dare" className="hover:text-purple-400 transition-colors flex items-center gap-1.5">
-            <Sparkles className="w-4 h-4 text-purple-400" /> Truth & Dare
+          <Link href="/spotlight" className="hover:text-orange-400 transition-colors flex items-center gap-1.5">
+            <Flame className="w-4 h-4 text-orange-500" /> Chaos Spotlight
           </Link>
           <Link href="/judge-me" className="hover:text-red-400 transition-colors flex items-center gap-1.5">
             <ShieldAlert className="w-4 h-4 text-red-400" /> Judge Me

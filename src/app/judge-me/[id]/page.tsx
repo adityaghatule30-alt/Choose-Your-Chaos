@@ -463,7 +463,7 @@ export default function CaseDetailPage({ params }: { params: Promise<{ id: strin
 
                 {/* Reactions bar */}
                 <div className="flex items-center gap-1.5 flex-wrap">
-                  {['??', '??', '??', '??', '??'].map((emoji) => {
+                  {['😂', '💀', '😭', '🔥', '🤨'].map((emoji) => {
                     const count = cm.reactions_count?.[emoji] || 0
                     const userReacted = cm.user_reactions?.includes(emoji)
                     return (
