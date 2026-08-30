@@ -3,13 +3,14 @@
 import { useState } from 'react'
 import { useAuth } from '@/components/AuthProvider'
 import { UPIPaymentModal } from '@/components/UPIPayment'
-import { Zap, Heart, Sparkles, Check, ArrowRight, ShieldCheck, ArrowLeft } from 'lucide-react'
+import { Zap, Heart, Sparkles, Check, ArrowRight, ShieldCheck, ArrowLeft, KeyRound } from 'lucide-react'
 import Link from 'next/link'
 
 export default function FuelPage() {
   const { user, refreshProfile } = useAuth()
   const [selectedAmount, setSelectedAmount] = useState<number>(100)
   const [customAmount, setCustomAmount] = useState('')
+  const [utrNumber, setUtrNumber] = useState('')
   const [showQR, setShowQR] = useState(false)
   const [funding, setFunding] = useState(false)
   const [success, setSuccess] = useState(false)
@@ -37,7 +38,10 @@ export default function FuelPage() {
       const res = await fetch('/api/fuel', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ amount: activeAmount }),
+        body: JSON.stringify({
+          amount: activeAmount,
+          utr: utrNumber.trim(),
+        }),
       })
       const data = await res.json()
 
@@ -153,11 +157,35 @@ export default function FuelPage() {
               payeeVpa="adityaghatule30@okaxis"
             />
 
+            {/* Optional UTR / Reference Input */}
+            <div className="max-w-md mx-auto bg-neutral-900 border border-neutral-800 rounded-3xl p-4 sm:p-5 shadow-xl">
+              <label className="block text-xs font-bold uppercase tracking-wider text-neutral-300 mb-1.5 text-left flex items-center gap-1.5">
+                <KeyRound className="w-3.5 h-3.5 text-yellow-400" /> UPI Reference / UTR Number (Optional)
+              </label>
+              <input
+                type="text"
+                value={utrNumber}
+                onChange={(e) => setUtrNumber(e.target.value)}
+                placeholder="e.g. 423589123456"
+                maxLength={20}
+                className="w-full bg-neutral-950 border border-neutral-800 rounded-xl px-4 py-2.5 text-white text-xs font-mono focus:outline-none focus:border-yellow-400 transition-colors"
+              />
+              <p className="text-[10px] text-neutral-500 mt-1 text-left">
+                Found on your payment confirmation screen in GPay, PhonePe, or Paytm.
+              </p>
+            </div>
+
+            {errorMsg && (
+              <div className="max-w-md mx-auto p-4 bg-red-950/60 border border-red-800 rounded-2xl text-red-300 text-xs">
+                {errorMsg}
+              </div>
+            )}
+
             <div className="flex flex-col sm:flex-row gap-3 max-w-md mx-auto">
               <button
                 type="button"
                 onClick={() => setShowQR(false)}
-                className="w-full py-3.5 bg-neutral-900 hover:bg-neutral-800 border border-neutral-800 text-neutral-300 font-bold text-xs rounded-2xl transition-all cursor-pointer"
+                className="w-full py-3.5 bg-neutral-900 hover:bg-neutral-850 border border-neutral-800 text-neutral-300 font-bold text-xs rounded-2xl transition-all cursor-pointer"
               >
                 Change Amount
               </button>
@@ -166,7 +194,7 @@ export default function FuelPage() {
                 type="button"
                 onClick={handleConfirmPaid}
                 disabled={funding}
-                className="w-full py-3.5 bg-emerald-600 hover:bg-emerald-500 text-white font-black text-xs uppercase tracking-wider rounded-2xl shadow-xl shadow-emerald-600/20 transition-all cursor-pointer flex items-center justify-center gap-1.5"
+                className="w-full py-3.5 bg-emerald-600 hover:bg-emerald-500 text-white font-black text-xs uppercase tracking-wider rounded-2xl shadow-xl shadow-emerald-600/20 transition-all cursor-pointer flex items-center justify-center gap-1.5 disabled:opacity-50"
               >
                 <Check className="w-4 h-4" />
                 {funding ? 'VERIFYING...' : "I'VE COMPLETED PAYMENT"}

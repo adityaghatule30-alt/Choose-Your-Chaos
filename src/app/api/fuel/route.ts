@@ -9,17 +9,21 @@ export async function POST(request: Request) {
     } = await supabase.auth.getUser()
 
     if (!user) {
-      return NextResponse.json({ success: false, error: 'UNAUTHORIZED' }, { status: 401 })
+      return NextResponse.json({ success: false, error: 'UNAUTHORIZED', message: 'Please log in to claim supporter rewards.' }, { status: 401 })
     }
 
     const body = await request.json()
-    const { amount, note } = body
+    const { amount, utr } = body
 
     if (!amount || typeof amount !== 'number' || amount < 10) {
       return NextResponse.json({ success: false, message: 'Invalid support amount.' }, { status: 400 })
     }
 
-    // Award Supporter Badge & XP if authenticated
+    if (utr && utr.trim().length < 4) {
+      return NextResponse.json({ success: false, message: 'Please enter a valid UPI Reference / UTR Number.' }, { status: 400 })
+    }
+
+    // Award Supporter Badge & XP
     const { data: profile } = await supabase.from('profiles').select('xp, chaos_score').eq('id', user.id).single()
     if (profile) {
       await supabase
@@ -34,6 +38,7 @@ export async function POST(request: Request) {
     return NextResponse.json({
       success: true,
       amount,
+      utr: utr ? utr.trim() : null,
       message: 'Thank you for fueling the madness! You earned +100 XP and Supporter Karma 🔥',
     })
   } catch (err) {
