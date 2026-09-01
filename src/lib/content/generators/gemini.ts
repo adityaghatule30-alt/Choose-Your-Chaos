@@ -1,4 +1,4 @@
-﻿import { CandidateQuestion, CandidateTruthDare, ContentGenerator } from '../types'
+import { CandidateQuestion, CandidateTruthDare, ContentGenerator } from '../types'
 import { CONTENT_CONFIG } from '../config'
 
 export class GeminiContentGenerator implements ContentGenerator {
@@ -25,15 +25,17 @@ Generate exactly ${safeCount} unique, hilarious, high-stakes Either/Or dilemmas.
 Rules:
 1. Category scope: ${categorySlug ? `Focus on category "${categorySlug}"` : 'Mix across Money, College, Friends, Work, Relationships, Personality, Indian, Impossible Choices'}.
 2. Formatting: Return a strictly valid JSON array of objects.
-3. Natural Language: Use engaging conversational English with occasional relatable Indian / Hinglish dilemmas where culturally suitable (e.g. ₹ amounts, UPI, family dynamics, college attendance, corporate appraisal chaos).
-4. No boring questions (e.g. "Tea vs Coffee"). Make them moral/social/existential dilemmas with genuine stakes.
-5. ZERO unsafe content: No self-harm, illegal acts, sexual violence, hate speech, or dangerous physical acts.
-6. JSON Schema per item:
+3. CONCISE & PUNCHY: Setups MUST be 10-18 words max (1-2 short sentences). Options MUST be 3-6 words max.
+4. ZERO REPETITION: Never repeat the options inside the question prompt text. The prompt sets the scenario, the options provide the distinct choices.
+5. Natural Language: Use engaging conversational English with occasional relatable Indian / Hinglish dilemmas where culturally suitable (e.g. ₹ amounts, UPI, family dynamics, college attendance, corporate appraisal chaos).
+6. No boring questions (e.g. "Tea vs Coffee"). Make them moral/social/existential dilemmas with genuine stakes.
+7. ZERO unsafe content: No self-harm, illegal acts, sexual violence, hate speech, or dangerous physical acts.
+8. JSON Schema per item:
 [
   {
-    "question": "Question text...",
-    "option_a": "Option A text...",
-    "option_b": "Option B text...",
+    "question": "Short punchy setup (10-18 words)...",
+    "option_a": "Choice A (3-6 words with emoji)...",
+    "option_b": "Choice B (3-6 words with emoji)...",
     "category_slug": "money | college | friends | work | relationships | personality | dark-humor | indian | impossible-choices | funny",
     "difficulty": "easy | medium | chaos",
     "humor_level": "light | sarcastic | dark",

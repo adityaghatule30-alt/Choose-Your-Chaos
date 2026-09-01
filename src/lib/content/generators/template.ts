@@ -1,4 +1,4 @@
-﻿import { CandidateQuestion, ContentGenerator } from '../types'
+import { CandidateQuestion, ContentGenerator } from '../types'
 
 interface TemplatePattern {
   categorySlug: string
@@ -18,11 +18,11 @@ const TEMPLATE_PATTERNS: TemplatePattern[] = [
     humorLevel: 'sarcastic',
     language: 'en',
     tags: ['money', 'wealth', 'dilemma'],
-    template: (a, b) => `Would you rather ${a} or ${b}?`,
+    template: (a, b) => `Which financial chaos do you choose?`,
     optionsPool: [
-      ['receive ₹1 Lakh daily but only in 10-rupee coins 🪙', 'receive ₹50 Lakh lump sum with 60% tax deducted 💸'],
-      ['win ₹5 Crore but your credit score drops to 300 forever 📉', 'have an 850 credit score but zero cash in savings 🏦'],
-      ['have free international flights forever in middle seat ✈️', 'have free 5-star hotel stays but only in your hometown 🏨'],
+      ['₹1 Lakh daily in 10-rupee coins 🪙', '₹50 Lakh lump sum with 60% tax 💸'],
+      ['₹5 Crore with credit score 300 📉', '850 credit score with ₹0 savings 🏦'],
+      ['Free flights forever in middle seat ✈️', 'Free 5-star hotel in your hometown 🏨'],
     ],
   },
   // Work
@@ -32,11 +32,11 @@ const TEMPLATE_PATTERNS: TemplatePattern[] = [
     humorLevel: 'sarcastic',
     language: 'en',
     tags: ['work', 'boss', 'corporate'],
-    template: (a, b) => `At your job, would you rather ${a} or ${b}?`,
+    template: (a, b) => `At your corporate job, which disaster do you pick?`,
     optionsPool: [
-      ['reply-all to a CEO company email with a confused cat meme 🐱', 'have your screen share reveal your open job search tabs 💻'],
-      ['work 4-day workweeks with 2-hour daily commute 🚗', 'work fully remote with your mic unmuted 24/7 🎙️'],
-      ['have a micromanager who texts at 11 PM 📱', 'have a ghost manager who reviews work 6 months late 👻'],
+      ['Cat meme to company group 🐱', 'Screen share showing job hunt 💻'],
+      ['4-day week with 2-hr commute 🚗', 'Remote with mic unmuted 24/7 🎙️'],
+      ['Micromanager texting at 11 PM 📱', 'Manager reviewing 6 months late 👻'],
     ],
   },
   // College
@@ -46,10 +46,10 @@ const TEMPLATE_PATTERNS: TemplatePattern[] = [
     humorLevel: 'light',
     language: 'en',
     tags: ['college', 'exams', 'campus'],
-    template: (a, b) => `In your university semester, would you rather ${a} or ${b}?`,
+    template: (a, b) => `In your university semester, which schedule is worse?`,
     optionsPool: [
-      ['have an 8:00 AM class 5 days a week ⏰', 'have a 6:00 PM to 9:00 PM lab on Friday nights 🧪'],
-      ['write a 30-page essay in one night 📝', 'give a 10-minute impromptu speech in front of 500 students 🎤'],
+      ['8:00 AM class 5 days a week ⏰', 'Friday night 3-hour lab 🧪'],
+      ['30-page essay in one night 📝', '10-minute impromptu speech 🎤'],
     ],
   },
   // Indian
@@ -59,10 +59,10 @@ const TEMPLATE_PATTERNS: TemplatePattern[] = [
     humorLevel: 'sarcastic',
     language: 'hinglish',
     tags: ['desi', 'family', 'relatives'],
-    template: (a, b) => `During an Indian family gathering, would you rather ${a} or ${b}?`,
+    template: (a, b) => `During an Indian family gathering, who do you sit with?`,
     optionsPool: [
-      ['sit with the gossiping aunties and agree with everything ☕', 'sit with the political uncles and nod for 3 hours 🗞️'],
-      ['be forced to dance on the baraat stage solo 🕺', 'be forced to negotiate hotel room discounts with the manager 🏨'],
+      ['Gossiping aunties for 3 hours ☕', 'Political uncles arguing news 🗞️'],
+      ['Solo dance on baraat stage 🕺', 'Bargaining hotel discounts with manager 🏨'],
     ],
   },
   // Impossible Choices
@@ -72,10 +72,10 @@ const TEMPLATE_PATTERNS: TemplatePattern[] = [
     humorLevel: 'dark',
     language: 'en',
     tags: ['choices', 'extreme', 'paranoia'],
-    template: (a, b) => `Would you rather ${a} or ${b}?`,
+    template: (a, b) => `Which supernatural curse do you accept?`,
     optionsPool: [
-      ['be able to fast forward time through awkward moments ⏩', 'be able to rewind time by 30 seconds once a day ⏪'],
-      ['always feel like you forgot something important 🧠', 'never be able to tell what time of day it is 🕰️'],
+      ['Fast-forward awkward moments ⏩', 'Rewind 30 seconds once a day ⏪'],
+      ['Always feel you forgot something 🧠', 'Never know what time it is 🕰️'],
     ],
   },
 ]
