@@ -26,11 +26,18 @@ export async function POST(request: Request) {
     })
 
     if (error) {
-      return NextResponse.json({ success: false, error: error.message }, { status: 500 })
+      console.error('[Rooms API] submit_room_answer RPC error:', error)
+      return NextResponse.json({ success: false, error: error.message, message: error.message }, { status: 500 })
+    }
+
+    if (!data.success) {
+      console.warn('[Rooms API] submit_room_answer rejected:', data)
+      return NextResponse.json(data, { status: 400 })
     }
 
     return NextResponse.json(data)
-  } catch {
-    return NextResponse.json({ success: false, error: 'SERVER_ERROR' }, { status: 500 })
+  } catch (err: any) {
+    console.error('[Rooms API] submit_room_answer server error:', err?.message || err)
+    return NextResponse.json({ success: false, error: 'SERVER_ERROR', message: 'Failed to record answer.' }, { status: 500 })
   }
 }
