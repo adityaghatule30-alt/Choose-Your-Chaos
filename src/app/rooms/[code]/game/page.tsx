@@ -7,6 +7,7 @@ import { useAuth } from '@/components/AuthProvider'
 import { Room } from '@/types/rooms'
 import { GAME_DEFINITIONS } from '@/lib/games/definitions'
 import { createClient } from '@/lib/supabase/client'
+import { PlayerCard } from '@/components/social/PlayerCard'
 import {
   Flame,
   CheckCircle2,
@@ -540,6 +541,28 @@ export default function RoomGameplayPage({ params }: { params: Promise<{ code: s
           </div>
         )}
       </div>
+
+      {/* Compact Player Scoreboard — outside main card */}
+      {members.length > 0 && (
+        <div className="bg-neutral-900/70 border border-neutral-800 rounded-2xl p-4 shadow-xl">
+          <div className="flex items-center gap-2 mb-3">
+            <Users className="w-3.5 h-3.5 text-purple-400" />
+            <span className="text-[10px] font-black uppercase text-neutral-400 tracking-wider">
+              SQUAD SCORES
+            </span>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+            {members.map((m) => (
+              <PlayerCard
+                key={m.id || m.user_id}
+                member={m}
+                isCurrentUser={user?.id === m.user_id}
+                variant="game"
+              />
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   )
 }

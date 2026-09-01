@@ -26,24 +26,33 @@ export async function GET(request: Request) {
         const { data: convData, error: convErr } = await supabase.rpc('get_or_create_direct_conversation', {
           p_friend_id: friendId,
         })
-        if (convErr || !convData?.success) {
-          return NextResponse.json({ error: convData?.message || 'Could not start conversation' }, { status: 400 })
+        if (convErr) {
+          console.error('[/api/messages GET] RPC error:', convErr)
+          return NextResponse.json({ error: convErr.message }, { status: 500 })
+        }
+        if (!convData?.success) {
+          console.error('[/api/messages GET] RPC failed:', convData)
+          return NextResponse.json(
+            { error: convData?.error || 'CONVERSATION_FAILED', message: convData?.message || 'Could not start conversation.' },
+            { status: 400 }
+          )
         }
         activeConvId = convData.conversation_id
       }
 
-      // Fetch messages with sender info
+      // Fetch messages — join to profiles via the FK (messages.sender_id → profiles.id)
       const { data: messages, error: msgErr } = await supabase
         .from('messages')
         .select(`
           id, conversation_id, sender_id, content, created_at,
-          sender:sender_id (display_name, username, avatar_url)
+          profiles:sender_id (display_name, username, avatar_url)
         `)
         .eq('conversation_id', activeConvId)
         .order('created_at', { ascending: true })
         .limit(100)
 
       if (msgErr) {
+        console.error('[/api/messages GET] messages fetch error:', msgErr)
         return NextResponse.json({ error: msgErr.message }, { status: 500 })
       }
 
@@ -60,7 +69,7 @@ export async function GET(request: Request) {
         sender_id: m.sender_id,
         content: m.content,
         created_at: m.created_at,
-        sender: m.sender,
+        sender: m.profiles,
       }))
 
       return NextResponse.json({
@@ -130,7 +139,8 @@ export async function GET(request: Request) {
     summaries.sort((a, b) => new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime())
 
     return NextResponse.json({ conversations: summaries })
-  } catch {
+  } catch (err) {
+    console.error('[/api/messages GET] unexpected error:', err)
     return NextResponse.json({ error: 'SERVER_ERROR' }, { status: 500 })
   }
 }
@@ -162,8 +172,16 @@ export async function POST(request: Request) {
       const { data: convData, error: convErr } = await supabase.rpc('get_or_create_direct_conversation', {
         p_friend_id: friend_id,
       })
-      if (convErr || !convData?.success) {
-        return NextResponse.json({ error: convData?.message || 'Could not start conversation.' }, { status: 400 })
+      if (convErr) {
+        console.error('[/api/messages POST] RPC error:', convErr)
+        return NextResponse.json({ error: convErr.message }, { status: 500 })
+      }
+      if (!convData?.success) {
+        console.error('[/api/messages POST] RPC failed:', convData)
+        return NextResponse.json(
+          { error: convData?.error || 'CONVERSATION_FAILED', message: convData?.message || 'Could not start conversation.' },
+          { status: 400 }
+        )
       }
       activeConvId = convData.conversation_id
     }
@@ -172,6 +190,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'MISSING_CONVERSATION_ID' }, { status: 400 })
     }
 
+    // sender_id is always auth.uid() — never trusted from client body
     const { data: message, error: msgError } = await supabase
       .from('messages')
       .insert({
@@ -181,16 +200,27 @@ export async function POST(request: Request) {
       })
       .select(`
         id, conversation_id, sender_id, content, created_at,
-        sender:sender_id (display_name, username, avatar_url)
+        profiles:sender_id (display_name, username, avatar_url)
       `)
       .single()
 
     if (msgError) {
-      return NextResponse.json({ error: msgError.message }, { status: 500 })
+      console.error('[/api/messages POST] insert error:', msgError)
+      return NextResponse.json({ error: msgError.message, message: 'Failed to send message.' }, { status: 500 })
     }
 
-    return NextResponse.json({ success: true, message })
-  } catch {
+    const formattedMessage: DirectMessage = {
+      id: (message as any).id,
+      conversation_id: (message as any).conversation_id,
+      sender_id: (message as any).sender_id,
+      content: (message as any).content,
+      created_at: (message as any).created_at,
+      sender: (message as any).profiles,
+    }
+
+    return NextResponse.json({ success: true, message: formattedMessage })
+  } catch (err) {
+    console.error('[/api/messages POST] unexpected error:', err)
     return NextResponse.json({ error: 'SERVER_ERROR' }, { status: 500 })
   }
 }
