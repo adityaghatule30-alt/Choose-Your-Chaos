@@ -463,21 +463,23 @@ export default function CaseDetailPage({ params }: { params: Promise<{ id: strin
 
                 {/* Reactions bar */}
                 <div className="flex items-center gap-1.5 flex-wrap">
-                  {['😂', '💀', '😭', '🔥', '🤨'].map((emoji) => {
+                  {['🔥', '💀', '🤡', '👏', '👀'].map((emoji) => {
                     const count = cm.reactions_count?.[emoji] || 0
                     const userReacted = cm.user_reactions?.includes(emoji)
                     return (
                       <button
                         key={emoji}
+                        type="button"
+                        aria-label={`React with ${emoji}`}
                         onClick={() => handleToggleReaction(cm.id, emoji)}
-                        className={`px-2.5 py-1 rounded-xl text-xs flex items-center gap-1 border transition-all cursor-pointer ${
+                        className={`min-h-[36px] min-w-[40px] px-3 py-1.5 rounded-xl text-xs flex items-center justify-center gap-1.5 border transition-all cursor-pointer select-none active:scale-95 ${
                           userReacted
-                            ? 'bg-neutral-800 border-yellow-500/50 text-white'
-                            : 'bg-neutral-900 border-neutral-800 text-neutral-400 hover:border-neutral-700'
+                            ? 'bg-neutral-800 border-yellow-500/50 text-white ring-1 ring-yellow-400/30'
+                            : 'bg-neutral-900 border-neutral-800 text-neutral-300 hover:border-neutral-700 hover:text-white'
                         }`}
                       >
                         <span>{emoji}</span>
-                        {count > 0 && <span className="text-[10px] font-bold">{count}</span>}
+                        {count > 0 && <span className="text-[10px] font-bold text-yellow-400">{count}</span>}
                       </button>
                     )
                   })}

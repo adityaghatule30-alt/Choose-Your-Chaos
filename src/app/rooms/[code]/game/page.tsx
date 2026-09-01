@@ -1,4 +1,4 @@
-﻿'use client'
+'use client'
 
 import { useEffect, useState, use, useRef, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
@@ -39,8 +39,12 @@ export default function RoomGameplayPage({ params }: { params: Promise<{ code: s
   const [realtimeStatus, setRealtimeStatus] = useState<RealtimeStatus>('CONNECTING')
 
   const isMountedRef = useRef(true)
+  const isInflightRef = useRef(false)
 
   const loadRoomState = useCallback(async (showLoading = false) => {
+    if (isInflightRef.current) return
+    isInflightRef.current = true
+
     if (showLoading && isMountedRef.current) {
       setLoading(true)
     }
@@ -69,6 +73,7 @@ export default function RoomGameplayPage({ params }: { params: Promise<{ code: s
         setErrorMsg('Failed to load live game state.')
       }
     } finally {
+      isInflightRef.current = false
       if (isMountedRef.current) {
         setLoading(false)
       }

@@ -627,24 +627,26 @@ export default function SpotlightRoomPage({ params }: { params: Promise<{ code: 
 
                     {/* Emoji Reaction Bar with pop animation */}
                     {q.status === 'answered' && (
-                      <div className="flex items-center gap-1.5 flex-wrap pt-1">
-                        {EMOJI_REACTIONS.map((emoji) => {
+                      <div className="flex items-center gap-2 flex-wrap pt-1">
+                        {['🔥', '💀', '🤡', '👏', '👀'].map((emoji) => {
                           const count = q.reactions_count?.[emoji] || 0
                           const userReacted = q.user_reactions?.includes(emoji)
                           return (
                             <button
                               key={emoji}
+                              type="button"
+                              aria-label={`React with ${emoji}`}
                               onClick={() => handleToggleReaction(q.id, emoji)}
-                              className={`px-2.5 py-1 rounded-xl text-xs flex items-center gap-1 border transition-all cursor-pointer ${
+                              className={`min-h-[38px] min-w-[42px] px-3 py-1.5 rounded-xl text-xs flex items-center justify-center gap-1.5 border transition-all cursor-pointer select-none active:scale-95 ${
                                 userReacted
                                   ? 'bg-neutral-800 border-orange-500/60 text-white shadow-sm ring-2 ring-orange-500/20 scale-105'
-                                  : 'bg-neutral-900 border-neutral-800 text-neutral-400 hover:border-neutral-700 hover:scale-105 active:scale-95'
+                                  : 'bg-neutral-900 border-neutral-800 text-neutral-300 hover:border-neutral-750 hover:text-white hover:scale-105'
                               }`}
                             >
-                              <span className={userReacted ? 'animate-reaction-bounce inline-block' : ''}>
+                              <span className={userReacted ? 'animate-reaction-bounce inline-block text-sm' : 'text-sm'}>
                                 {emoji}
                               </span>
-                              {count > 0 && <span className="text-[10px] font-bold">{count}</span>}
+                              {count > 0 && <span className="text-[10px] font-bold text-orange-400">{count}</span>}
                             </button>
                           )
                         })}

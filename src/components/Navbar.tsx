@@ -1,4 +1,4 @@
-﻿'use client'
+'use client'
 
 import Link from 'next/link'
 import { useRouter, usePathname } from 'next/navigation'
@@ -210,7 +210,8 @@ export function Navbar() {
           {/* Mobile Navigation Toggle Button */}
           <button
             onClick={() => setMobileNavOpen(!mobileNavOpen)}
-            className="lg:hidden p-2 bg-neutral-900 border border-neutral-800 rounded-xl text-neutral-300 hover:text-white"
+            aria-label={mobileNavOpen ? "Close main navigation menu" : "Open main navigation menu"}
+            className="lg:hidden p-2.5 min-w-[44px] min-h-[44px] flex items-center justify-center bg-neutral-900 border border-neutral-800 rounded-xl text-neutral-300 hover:text-white cursor-pointer active:scale-95 transition-all"
           >
             {mobileNavOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
           </button>
@@ -220,7 +221,7 @@ export function Navbar() {
       {/* Mobile Drawer Navigation */}
       {mobileNavOpen && (
         <div className="lg:hidden mt-3 pt-3 border-t border-neutral-800/80 space-y-2 animate-pop-in">
-          <div className="grid grid-cols-2 gap-1.5">
+          <div className="grid grid-cols-2 gap-2">
             {navLinks.map((item) => {
               const Icon = item.icon
               const isActive = pathname === item.href || (item.href !== '/' && pathname.startsWith(item.href))
@@ -229,26 +230,26 @@ export function Navbar() {
                   key={item.href}
                   href={item.href}
                   onClick={() => setMobileNavOpen(false)}
-                  className={`p-2.5 rounded-xl text-xs font-black flex items-center gap-2 ${
+                  className={`p-3 min-h-[44px] rounded-xl text-xs font-black flex items-center gap-2.5 transition-all ${
                     isActive
-                      ? 'bg-purple-600 text-white'
-                      : 'bg-neutral-900 text-neutral-300 hover:bg-neutral-850'
+                      ? 'bg-purple-600 text-white shadow-md shadow-purple-500/20'
+                      : 'bg-neutral-900 text-neutral-300 hover:bg-neutral-850 hover:text-white'
                   }`}
                 >
-                  <Icon className="w-4 h-4" />
-                  {item.label}
+                  <Icon className="w-4 h-4 shrink-0" />
+                  <span className="truncate">{item.label}</span>
                 </Link>
               )
             })}
           </div>
 
-          <div className="pt-2 border-t border-neutral-800/60 flex items-center justify-between text-xs">
+          <div className="pt-2.5 border-t border-neutral-800/60 flex items-center justify-between text-xs">
             {secondaryLinks.map((s) => (
               <Link
                 key={s.href}
                 href={s.href}
                 onClick={() => setMobileNavOpen(false)}
-                className="text-neutral-400 hover:text-yellow-400 font-bold p-1"
+                className="text-neutral-400 hover:text-yellow-400 font-bold py-2 px-2 min-h-[36px] flex items-center transition-colors"
               >
                 {s.label}
               </Link>

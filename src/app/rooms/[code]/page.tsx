@@ -1,4 +1,4 @@
-﻿'use client'
+'use client'
 
 import { useEffect, useState, use, useRef, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
@@ -40,9 +40,13 @@ export default function RoomLobbyPage({ params }: { params: Promise<{ code: stri
 
   const isMountedRef = useRef(true)
   const roomRef = useRef<Room | null>(null)
+  const isInflightRef = useRef(false)
   roomRef.current = room
 
   const loadRoomState = useCallback(async (showLoading = false) => {
+    if (isInflightRef.current) return
+    isInflightRef.current = true
+
     if (showLoading && isMountedRef.current) {
       setLoading(true)
     }
@@ -73,6 +77,7 @@ export default function RoomLobbyPage({ params }: { params: Promise<{ code: stri
         setErrorMsg('Connection error fetching lobby state.')
       }
     } finally {
+      isInflightRef.current = false
       if (isMountedRef.current) {
         setLoading(false)
       }

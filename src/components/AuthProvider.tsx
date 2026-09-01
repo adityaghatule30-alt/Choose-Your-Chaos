@@ -1,6 +1,6 @@
-﻿'use client'
+'use client'
 
-import { createContext, useContext, useEffect, useState } from 'react'
+import { createContext, useContext, useEffect, useState, useRef } from 'react'
 import { User, Session } from '@supabase/supabase-js'
 import { createClient } from '@/lib/supabase/client'
 import { Profile } from '@/types/database'
@@ -30,7 +30,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [isLoading, setIsLoading] = useState(true)
   const supabase = createClient()
 
+  const inflightProfileFetch = useRef<string | null>(null)
+
   const fetchProfile = async (userId: string) => {
+    // If a fetch is already in flight for this exact user, skip redundant fetch
+    if (inflightProfileFetch.current === userId) {
+      return
+    }
+    inflightProfileFetch.current = userId
+
     try {
       const { data, error } = await supabase
         .from('profiles')
@@ -45,16 +53,23 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
     } catch {
       setProfile(null)
+    } finally {
+      inflightProfileFetch.current = null
     }
   }
 
   useEffect(() => {
+    let isMounted = true
+
     // Initial active session check
     supabase.auth.getSession().then(({ data: { session } }) => {
+      if (!isMounted) return
       setSession(session)
       setUser(session?.user ?? null)
       if (session?.user) {
-        fetchProfile(session.user.id).finally(() => setIsLoading(false))
+        fetchProfile(session.user.id).finally(() => {
+          if (isMounted) setIsLoading(false)
+        })
       } else {
         setIsLoading(false)
       }
@@ -64,6 +79,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange(async (_event, session) => {
+      if (!isMounted) return
       setSession(session)
       setUser(session?.user ?? null)
       if (session?.user) {
@@ -75,12 +91,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     })
 
     return () => {
+      isMounted = false
       subscription.unsubscribe()
     }
   }, [])
 
   const refreshProfile = async () => {
     if (user) {
+      inflightProfileFetch.current = null
       await fetchProfile(user.id)
     }
   }
