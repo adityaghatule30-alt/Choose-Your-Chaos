@@ -1,6 +1,5 @@
-﻿import { NextResponse } from 'next/server'
+import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
-import { getRandomChaosAIComment, shouldTriggerChaosAI } from '@/lib/services/chaos-ai'
 
 export async function POST(request: Request) {
   try {
@@ -37,14 +36,11 @@ export async function POST(request: Request) {
       return NextResponse.json({ success: false, message: 'Only the spotlight player can answer.' }, { status: 403 })
     }
 
-    const chaosAiComment = shouldTriggerChaosAI() ? getRandomChaosAIComment() : null
-
     const { data: updatedQ, error } = await supabase
       .from('spotlight_questions')
       .update({
         answer: answer.trim(),
         status: 'answered',
-        chaos_ai_comment: chaosAiComment,
       })
       .eq('id', question_id)
       .select('*')

@@ -1,4 +1,4 @@
-﻿import { NextResponse } from 'next/server'
+import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { generateVoteReaction } from '@/lib/services/reactions'
 
@@ -41,12 +41,30 @@ export async function POST(request: Request) {
       return NextResponse.json(data)
     }
 
-    // Generate contextual funny reaction
+    // Fetch question details for contextual Chaos AI roast
+    const { data: q } = await supabase
+      .from('questions')
+      .select('question, option_a, option_b')
+      .eq('id', question_id)
+      .single()
+
     const chosenPercent = choice === 'A' ? data.stats.percent_a : data.stats.percent_b
-    const reaction = generateVoteReaction({
-      choice,
-      percentChosen: chosenPercent,
-    })
+
+    // Generate contextual funny reaction using Gemini AI with fallback
+    let reaction = ''
+    if (q) {
+      const { generateChaosAIRoast } = await import('@/lib/services/chaos-ai')
+      reaction = await generateChaosAIRoast({
+        situation: q.question,
+        optionA: q.option_a,
+        optionB: q.option_b,
+        choice,
+        percentChosen: chosenPercent,
+        playerName: user.user_metadata?.display_name || user.email?.split('@')[0],
+      })
+    } else {
+      reaction = generateVoteReaction({ choice, percentChosen: chosenPercent })
+    }
 
     return NextResponse.json({
       ...data,
