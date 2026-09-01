@@ -30,6 +30,7 @@ export interface RoomRound {
   status: 'waiting' | 'active' | 'revealing' | 'completed'
   started_at: string | null
   ended_at: string | null
+  reveal_at?: string | null
   prompt_data?: any
   target_user_id?: string | null
   target_user_name?: string | null

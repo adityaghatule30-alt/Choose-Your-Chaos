@@ -7,24 +7,14 @@ import { useAuth } from '@/components/AuthProvider'
 import { Room } from '@/types/rooms'
 import { GAME_DEFINITIONS } from '@/lib/games/definitions'
 import { createClient } from '@/lib/supabase/client'
-import { Avatar } from '@/components/Avatar'
 import {
   Flame,
-  Crown,
   CheckCircle2,
   AlertCircle,
   ArrowRight,
   Sparkles,
   Users,
-  Eye,
-  WifiOff,
-  RefreshCw,
   Send,
-  HelpCircle,
-  Skull,
-  Camera,
-  ShieldAlert,
-  UserCheck,
 } from 'lucide-react'
 
 type RealtimeStatus = 'CONNECTING' | 'LIVE REALTIME' | 'RECONNECTING' | 'OFFLINE'
@@ -41,11 +31,11 @@ export default function RoomGameplayPage({ params }: { params: Promise<{ code: s
   const [textInput, setTextInput] = useState('')
   const [selectedVote, setSelectedVote] = useState<string | null>(null)
   const [submitting, setSubmitting] = useState(false)
-  const [revealing, setRevealing] = useState(false)
   const [advancing, setAdvancing] = useState(false)
   const [loading, setLoading] = useState(true)
   const [errorMsg, setErrorMsg] = useState<string | null>(null)
   const [realtimeStatus, setRealtimeStatus] = useState<RealtimeStatus>('CONNECTING')
+  const [countdownSeconds, setCountdownSeconds] = useState<number | null>(null)
 
   const isMountedRef = useRef(true)
   const isInflightRef = useRef(false)
@@ -68,12 +58,19 @@ export default function RoomGameplayPage({ params }: { params: Promise<{ code: s
 
       if (data.room) {
         setRoom(data.room)
-        if (data.room.user_answer) {
-          setSelectedChoice(data.room.user_answer)
+        setSelectedChoice(data.room.user_answer || null)
+        setSelectedVote(data.room.user_vote || null)
+
+        // Handle synchronized countdown calculation from server reveal_at timestamp
+        const round = data.room.current_round_data
+        if (round?.status === 'active' && round?.reveal_at) {
+          const diffMs = new Date(round.reveal_at).getTime() - new Date().getTime()
+          const secondsLeft = Math.max(0, Math.ceil(diffMs / 1000))
+          setCountdownSeconds(secondsLeft)
+        } else {
+          setCountdownSeconds(null)
         }
-        if (data.room.user_vote) {
-          setSelectedVote(data.room.user_vote)
-        }
+
         if (data.room.status === 'finished') {
           router.push(`/rooms/${roomCode}/results`)
         }
@@ -91,6 +88,24 @@ export default function RoomGameplayPage({ params }: { params: Promise<{ code: s
       }
     }
   }, [roomCode, router])
+
+  // Live countdown timer ticking effect
+  useEffect(() => {
+    if (countdownSeconds === null || countdownSeconds <= 0) return
+
+    const timer = setInterval(() => {
+      setCountdownSeconds((prev) => {
+        if (prev === null || prev <= 1) {
+          clearInterval(timer)
+          loadRoomState()
+          return 0
+        }
+        return prev - 1
+      })
+    }, 1000)
+
+    return () => clearInterval(timer)
+  }, [countdownSeconds, loadRoomState])
 
   useEffect(() => {
     isMountedRef.current = true
@@ -143,7 +158,7 @@ export default function RoomGameplayPage({ params }: { params: Promise<{ code: s
       if (document.visibilityState === 'visible') {
         loadRoomState()
       }
-    }, 3500)
+    }, 3000)
 
     const handleFocus = () => {
       if (document.visibilityState === 'visible') {
@@ -196,63 +211,6 @@ export default function RoomGameplayPage({ params }: { params: Promise<{ code: s
     }
   }
 
-  // Submit vote for imposter, lie, worst answer, or caption
-  const handleVote = async (targetId: string) => {
-    if (!room?.current_round_data || submitting || selectedVote) return
-
-    setSelectedVote(targetId)
-    setSubmitting(true)
-    setErrorMsg(null)
-
-    try {
-      const res = await fetch('/api/rooms/vote', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          round_id: room.current_round_data.id,
-          target_id: targetId,
-        }),
-      })
-      const data = await res.json()
-      if (data.success) {
-        loadRoomState()
-      } else {
-        setErrorMsg(data.message || 'Failed to submit vote.')
-        setSelectedVote(null)
-      }
-    } catch {
-      setErrorMsg('Network error submitting vote.')
-      setSelectedVote(null)
-    } finally {
-      if (isMountedRef.current) setSubmitting(false)
-    }
-  }
-
-  // Reveal results (Host only)
-  const handleReveal = async () => {
-    if (!room?.current_round_data || revealing || !room.is_host) return
-    setRevealing(true)
-    setErrorMsg(null)
-
-    try {
-      const res = await fetch('/api/rooms/reveal', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ round_id: room.current_round_data.id }),
-      })
-      const data = await res.json()
-      if (data.success) {
-        loadRoomState()
-      } else {
-        setErrorMsg(data.message || 'Failed to reveal answers.')
-      }
-    } catch {
-      setErrorMsg('Network error revealing answers.')
-    } finally {
-      if (isMountedRef.current) setRevealing(false)
-    }
-  }
-
   // Advance to next round (Host only)
   const handleNextRound = async () => {
     if (!room || advancing || !room.is_host) return
@@ -260,6 +218,7 @@ export default function RoomGameplayPage({ params }: { params: Promise<{ code: s
     setSelectedChoice(null)
     setSelectedVote(null)
     setTextInput('')
+    setCountdownSeconds(null)
     setErrorMsg(null)
 
     try {
@@ -323,6 +282,7 @@ export default function RoomGameplayPage({ params }: { params: Promise<{ code: s
   const totalMembers = members.length
   const answersCount = currentRound.answers_count || 0
   const allAnswered = answersCount >= totalMembers
+  const isCountingDown = !isRevealed && (currentRound.reveal_at !== undefined && currentRound.reveal_at !== null)
   const gameMode = room.game_mode || 'either_or'
   const gameDef = GAME_DEFINITIONS[gameMode] || GAME_DEFINITIONS.either_or
   const isTarget = currentRound.target_user_id === user?.id
@@ -408,15 +368,10 @@ export default function RoomGameplayPage({ params }: { params: Promise<{ code: s
             <h1 className="text-xl sm:text-2xl font-black text-white leading-snug">
               "{currentRound.is_imposter ? promptData.imposterPrompt : promptData.crewPrompt || 'Answer the prompt'}"
             </h1>
-            <p className="text-xs text-neutral-400 mt-1">
-              {currentRound.is_imposter
-                ? 'Blend in! Others got a different prompt.'
-                : 'Everyone except 1 person has this exact prompt.'}
-            </p>
           </div>
         )}
 
-        {/* 4. Guess The Player / Chain Reaction / Two Truths */}
+        {/* 4. Other Game Modes */}
         {(gameMode === 'guess_player' || gameMode === 'chain_reaction' || gameMode === 'two_truths') && (
           <div className="text-center mb-6">
             <span className="text-[10px] font-black uppercase text-yellow-400 tracking-widest block mb-1">
@@ -439,8 +394,6 @@ export default function RoomGameplayPage({ params }: { params: Promise<{ code: s
             </h1>
           </div>
         )}
-
-        {/* Interactive Play Controls */}
 
         {/* Binary Choices (Either/Or, Mind Reader) */}
         {(gameMode === 'either_or' || gameMode === 'mind_reader') && currentRound.question && (
@@ -517,19 +470,34 @@ export default function RoomGameplayPage({ params }: { params: Promise<{ code: s
           </form>
         )}
 
-        {/* Voting & Anonymized Answers Display */}
-        {selectedChoice && !isRevealed && (
-          <div className="p-4 bg-neutral-950 border border-neutral-800 rounded-2xl mb-6 text-center animate-fade-in">
-            <span className="text-xs font-black text-yellow-400 flex items-center justify-center gap-1.5">
-              <CheckCircle2 className="w-4 h-4 text-emerald-400" /> YOUR ANSWER IS LOCKED IN
+        {/* Synchronized Automatic Countdown Banner */}
+        {isCountingDown && (
+          <div className="p-6 bg-gradient-to-r from-purple-950/80 via-neutral-900 to-pink-950/80 border border-purple-500/50 rounded-3xl mb-6 text-center shadow-2xl animate-pop-in">
+            <span className="text-xs font-black uppercase tracking-widest text-purple-400 block mb-1">
+              REVEALING IN
             </span>
-            <p className="text-[11px] text-neutral-400 mt-1">
-              Waiting for all players ({answersCount}/{totalMembers}) to finish before reveal.
+            <div className="text-5xl font-black text-white tracking-tight my-2 animate-bounce">
+              {countdownSeconds ?? 5}
+            </div>
+            <p className="text-xs text-neutral-300 font-bold">
+              Squad answers incoming 👀
             </p>
           </div>
         )}
 
-        {/* Revealed Results / Voting Grid */}
+        {/* Locked State when waiting for others */}
+        {selectedChoice && !isRevealed && !isCountingDown && (
+          <div className="p-5 bg-neutral-950 border border-neutral-800 rounded-2xl mb-6 text-center animate-fade-in">
+            <span className="text-xs font-black text-yellow-400 flex items-center justify-center gap-1.5">
+              <CheckCircle2 className="w-4 h-4 text-emerald-400" /> YOUR ANSWER IS LOCKED IN
+            </span>
+            <p className="text-[11px] text-neutral-400 mt-1">
+              Waiting for other players... ({answersCount}/{totalMembers} answered)
+            </p>
+          </div>
+        )}
+
+        {/* Revealed Results Grid */}
         {isRevealed && currentRound.answers && currentRound.answers.length > 0 && (
           <div className="space-y-3 mb-6 animate-pop-in">
             <span className="text-[11px] font-black uppercase text-neutral-400 tracking-wider block mb-2 text-center">
@@ -553,32 +521,22 @@ export default function RoomGameplayPage({ params }: { params: Promise<{ code: s
           </div>
         )}
 
-        {/* Host Controls */}
-        {isHost && (
+        {/* Host Next Round Controls */}
+        {isHost && isRevealed && (
           <div className="pt-4 border-t border-neutral-800/80 flex items-center justify-between">
             <div className="text-xs text-neutral-400 font-bold flex items-center gap-2">
               <Users className="w-4 h-4 text-purple-400" />
-              <span>{answersCount} of {totalMembers} submitted</span>
+              <span>Round complete</span>
             </div>
 
-            {!isRevealed ? (
-              <button
-                onClick={handleReveal}
-                disabled={revealing || answersCount === 0}
-                className="px-5 py-3 bg-gradient-to-r from-purple-600 to-pink-600 hover:opacity-95 text-white font-black text-xs uppercase tracking-wider rounded-xl transition-all active-press disabled:opacity-50 cursor-pointer shadow-md"
-              >
-                {revealing ? 'REVEALING...' : 'REVEAL SQUAD ANSWERS 👁️'}
-              </button>
-            ) : (
-              <button
-                onClick={handleNextRound}
-                disabled={advancing}
-                className="px-6 py-3.5 bg-yellow-400 hover:bg-yellow-300 text-neutral-950 font-black text-xs uppercase tracking-wider rounded-xl transition-all active-press flex items-center gap-2 cursor-pointer shadow-lg shadow-yellow-500/20"
-              >
-                <span>{room.current_round >= room.total_rounds ? 'VIEW RESULTS 🏆' : 'NEXT ROUND ➔'}</span>
-                <ArrowRight className="w-4 h-4" />
-              </button>
-            )}
+            <button
+              onClick={handleNextRound}
+              disabled={advancing}
+              className="px-6 py-3.5 bg-yellow-400 hover:bg-yellow-300 text-neutral-950 font-black text-xs uppercase tracking-wider rounded-xl transition-all active-press flex items-center gap-2 cursor-pointer shadow-lg shadow-yellow-500/20"
+            >
+              <span>{room.current_round >= room.total_rounds ? 'VIEW RESULTS 🏆' : 'NEXT ROUND ➔'}</span>
+              <ArrowRight className="w-4 h-4" />
+            </button>
           </div>
         )}
       </div>

@@ -65,7 +65,7 @@ export async function GET(request: Request) {
       const { data: round } = await supabase
         .from('room_rounds')
         .select(`
-          id, room_id, round_number, question_id, status, target_user_id, imposter_user_id, prompt_data, started_at, ended_at,
+          id, room_id, round_number, question_id, status, target_user_id, imposter_user_id, prompt_data, reveal_at, started_at, ended_at,
           questions:question_id (id, question, option_a, option_b, category_id)
         `)
         .eq('room_id', room.id)
@@ -73,6 +73,12 @@ export async function GET(request: Request) {
         .single()
 
       if (round) {
+        // Auto-check if reveal_at timestamp has passed and trigger server reveal
+        if (round.status === 'active' && round.reveal_at && new Date().getTime() >= new Date(round.reveal_at).getTime()) {
+          await supabase.rpc('auto_check_and_reveal_round', { p_round_id: round.id })
+          round.status = 'revealing'
+        }
+
         // Fetch answers count & user's own answer
         const { data: answers } = await supabase
           .from('room_answers')
@@ -108,7 +114,6 @@ export async function GET(request: Request) {
           }
         }
 
-        // Hide imposter identity unless revealing/completed or user is the imposter
         const isUserImposter = round.imposter_user_id === user.id
         const isRevealed = round.status === 'revealing' || round.status === 'completed'
 
@@ -149,16 +154,6 @@ export async function GET(request: Request) {
               metadata: a.metadata,
             }
           })
-        } else if (gameMode === 'worst_answer' || gameMode === 'caption_chaos' || gameMode === 'guess_player' || gameMode === 'imposter' || gameMode === 'whos_lying') {
-          // During voting stage, present answers anonymously without user IDs
-          if (totalAnswers >= mappedMembers.length || round.status === 'active') {
-            publicAnswers = (answers || []).map((a) => ({
-              user_id: round.status === 'active' ? (a.user_id === user.id ? user.id : 'hidden') : a.user_id,
-              display_name: 'Anonymous Player',
-              answer: a.answer,
-              metadata: a.metadata,
-            }))
-          }
         }
 
         currentRoundData = {
@@ -169,6 +164,7 @@ export async function GET(request: Request) {
           status: round.status,
           started_at: round.started_at,
           ended_at: round.ended_at,
+          reveal_at: round.reveal_at,
           prompt_data: promptPayload,
           target_user_id: round.target_user_id,
           target_user_name: targetMember?.display_name || 'Spotlight Target',

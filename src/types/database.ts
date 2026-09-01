@@ -1,4 +1,4 @@
-﻿export type Profile = {
+export type Profile = {
   id: string
   username: string
   display_name: string | null
@@ -9,6 +9,7 @@
   role: 'user' | 'moderator' | 'admin'
   humor_level: 'light' | 'sarcastic' | 'dark'
   language: 'en' | 'hinglish'
+  socials?: Record<string, string> | null
   created_at: string
   updated_at: string
 }

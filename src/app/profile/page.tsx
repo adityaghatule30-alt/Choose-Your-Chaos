@@ -1,4 +1,4 @@
-﻿'use client'
+'use client'
 
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
@@ -7,6 +7,7 @@ import { useAuth } from '@/components/AuthProvider'
 import { getLevelFromXP } from '@/lib/progression'
 import { UserStats } from '@/types/progression'
 import { Avatar } from '@/components/Avatar'
+import { SocialLinks } from '@/components/social/SocialLinks'
 import {
   Flame,
   Trophy,
@@ -138,6 +139,41 @@ export default function ProfilePage() {
             </div>
           </div>
         </div>
+      </div>
+
+      {/* Social Links Section */}
+      <div className="mb-8">
+        <SocialLinks
+          socials={profile.socials}
+          isEditable={true}
+          onSave={async (newSocials) => {
+            await fetch('/api/socials', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ socials: newSocials }),
+            })
+            window.location.reload()
+          }}
+        />
+      </div>
+
+      {/* Friends Hub Banner */}
+      <div className="bg-neutral-900 border border-neutral-800 rounded-3xl p-6 mb-8 flex flex-col sm:flex-row items-center justify-between gap-4 shadow-xl">
+        <div className="flex items-center gap-3">
+          <div className="p-3 bg-purple-950/60 border border-purple-800 rounded-2xl text-purple-400">
+            <Users className="w-6 h-6" />
+          </div>
+          <div>
+            <h3 className="text-sm font-black text-white">CHAOS SQUAD & DIRECT MESSAGES</h3>
+            <p className="text-xs text-neutral-400">Manage friends, accept incoming requests, and chat live.</p>
+          </div>
+        </div>
+        <Link
+          href="/friends"
+          className="px-5 py-2.5 bg-purple-600 hover:bg-purple-500 text-white font-black text-xs uppercase tracking-wider rounded-xl transition-all shadow"
+        >
+          VIEW SQUAD 👥
+        </Link>
       </div>
 
       {/* Stats Grid */}

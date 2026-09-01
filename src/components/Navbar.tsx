@@ -149,6 +149,14 @@ export function Navbar() {
                   </Link>
 
                   <Link
+                    href="/friends"
+                    onClick={() => setMenuOpen(false)}
+                    className="flex items-center gap-2 px-3 py-2 text-neutral-300 hover:text-white hover:bg-neutral-800 rounded-xl transition-colors font-semibold text-xs"
+                  >
+                    <Users className="w-4 h-4 text-yellow-400" /> Squad & Messages
+                  </Link>
+
+                  <Link
                     href="/achievements"
                     onClick={() => setMenuOpen(false)}
                     className="flex items-center gap-2 px-3 py-2 text-neutral-300 hover:text-white hover:bg-neutral-800 rounded-xl transition-colors font-semibold text-xs"
