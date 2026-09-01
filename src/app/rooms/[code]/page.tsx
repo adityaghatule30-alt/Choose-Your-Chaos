@@ -359,46 +359,15 @@ export default function RoomLobbyPage({ params }: { params: Promise<{ code: stri
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             {members.map((m) => {
-              const isUserHost = m.is_host
               const isCurrentUser = user && m.user_id === user.id
 
               return (
-                <div
+                <PlayerCard
                   key={m.id || m.user_id}
-                  className={`p-4 rounded-2xl border flex items-center justify-between transition-all duration-300 animate-slide-up shadow-md ${
-                    isCurrentUser
-                      ? 'bg-purple-950/30 border-purple-500/50 ring-1 ring-purple-500/20'
-                      : 'bg-neutral-950/70 border-neutral-800'
-                  }`}
-                >
-                  <div className="flex items-center gap-3 min-w-0">
-                    <Avatar
-                      src={m.avatar_url}
-                      fallback={m.display_name || 'Agent'}
-                      size="sm"
-                      glow={isUserHost}
-                    />
-                    <div className="min-w-0">
-                      <div className="text-sm font-black text-white truncate max-w-[140px] sm:max-w-[160px] flex items-center gap-1.5">
-                        <span>{m.display_name}</span>
-                        {isCurrentUser && (
-                          <span className="text-[9px] font-black uppercase text-purple-400 bg-purple-950/80 px-1.5 py-0.2 rounded border border-purple-800">
-                            YOU
-                          </span>
-                        )}
-                      </div>
-                      <div className="text-[10px] text-neutral-500 font-bold">
-                        {isUserHost ? 'Lobby Creator' : 'Chaos Agent'}
-                      </div>
-                    </div>
-                  </div>
-
-                  {isUserHost && (
-                    <span className="px-2.5 py-1 bg-yellow-400/10 border border-yellow-400/30 text-yellow-400 text-[10px] font-black rounded-full flex items-center gap-1 shrink-0 shadow-sm">
-                      <Crown className="w-3 h-3 fill-current" /> HOST
-                    </span>
-                  )}
-                </div>
+                  member={m}
+                  isCurrentUser={!!isCurrentUser}
+                  variant="lobby"
+                />
               )
             })}
           </div>
