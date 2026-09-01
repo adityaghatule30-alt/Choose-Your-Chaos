@@ -6,14 +6,13 @@ import Link from 'next/link'
 import { useAuth } from '@/components/AuthProvider'
 import { Room } from '@/types/rooms'
 import { createClient } from '@/lib/supabase/client'
-import { Avatar } from '@/components/Avatar'
+import { PlayerCard } from '@/components/social/PlayerCard'
 import {
   Users,
   Copy,
   Check,
   Play,
   Share2,
-  Crown,
   Flame,
   ArrowLeft,
   AlertCircle,
