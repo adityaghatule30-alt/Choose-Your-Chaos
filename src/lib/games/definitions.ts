@@ -14,6 +14,7 @@ export interface GameDefinition {
   title: string
   subtitle: string
   description: string
+  shortDescription: string
   iconName: string
   badge: string
   accentColor: string
@@ -28,6 +29,7 @@ export const GAME_DEFINITIONS: Record<GameMode, GameDefinition> = {
     title: '🎮 EITHER / OR',
     subtitle: 'Binary Dilemmas & Global Votes',
     description: 'Vote on impossible scenarios. Reveal squad percentages and deterministic witty reactions.',
+    shortDescription: 'Vote on impossible dilemmas.',
     iconName: 'Play',
     badge: 'CLASSIC MULTIPLAYER',
     accentColor: 'yellow',
@@ -40,6 +42,7 @@ export const GAME_DEFINITIONS: Record<GameMode, GameDefinition> = {
     title: '🧠 MIND READER',
     subtitle: 'Predict Their Choice',
     description: 'Predict what the spotlight player will choose. Prove you actually know your squad.',
+    shortDescription: "Predict the target's choice.",
     iconName: 'Sparkles',
     badge: 'PSYCHOLOGICAL PREDICTION',
     accentColor: 'purple',
@@ -52,6 +55,7 @@ export const GAME_DEFINITIONS: Record<GameMode, GameDefinition> = {
     title: '💀 WORST ANSWER WINS',
     subtitle: 'Unhinged Comedy Showdown',
     description: 'Submit the worst, most chaotic response to a normal situation. Funniest disaster wins.',
+    shortDescription: 'Funniest disaster answer wins.',
     iconName: 'Skull',
     badge: 'DARK COMEDY',
     accentColor: 'red',
@@ -64,6 +68,7 @@ export const GAME_DEFINITIONS: Record<GameMode, GameDefinition> = {
     title: "🕵️ WHO'S LYING?",
     subtitle: 'Deception & Spotting Cap',
     description: 'Everyone answers the dilemma. One answer is secretly completely fabricated. Spot the lie.',
+    shortDescription: 'Spot the fabricated answer.',
     iconName: 'ShieldAlert',
     badge: 'BLUFFING & SOCIAL DEDUCTION',
     accentColor: 'orange',
@@ -76,6 +81,7 @@ export const GAME_DEFINITIONS: Record<GameMode, GameDefinition> = {
     title: '🎭 IMPOSTER',
     subtitle: 'Find The Secret Outsider',
     description: 'Everyone receives the exact same prompt, except for one secret imposter. Vote them out.',
+    shortDescription: 'Spot the hidden imposter.',
     iconName: 'UserCheck',
     badge: 'HIDDEN ROLE',
     accentColor: 'pink',
@@ -88,6 +94,7 @@ export const GAME_DEFINITIONS: Record<GameMode, GameDefinition> = {
     title: '👀 GUESS THE PLAYER',
     subtitle: 'Anonymous Confessions',
     description: 'Everyone submits an anonymous response. Guess who in the room wrote which confession.',
+    shortDescription: 'Match confessions to players.',
     iconName: 'Eye',
     badge: 'ANONYMOUS REVEAL',
     accentColor: 'indigo',
@@ -100,6 +107,7 @@ export const GAME_DEFINITIONS: Record<GameMode, GameDefinition> = {
     title: '🧨 CHAIN REACTION',
     subtitle: 'Collaborative Story Mayhem',
     description: 'Each player adds one chaotic sentence to build a wild squad story before Chaos AI writes the ending.',
+    shortDescription: 'Build a chaotic story.',
     iconName: 'Flame',
     badge: 'STORY BUILDER',
     accentColor: 'amber',
@@ -112,6 +120,7 @@ export const GAME_DEFINITIONS: Record<GameMode, GameDefinition> = {
     title: '🃏 TWO TRUTHS, ONE CHAOS',
     subtitle: '3 Statements, 1 Fake',
     description: 'A player shares 3 wild statements. Two are true, one is pure fiction. Find the chaos.',
+    shortDescription: 'Find the one fake statement.',
     iconName: 'HelpCircle',
     badge: 'TRIVIA & LIES',
     accentColor: 'emerald',
@@ -124,6 +133,7 @@ export const GAME_DEFINITIONS: Record<GameMode, GameDefinition> = {
     title: '📸 CAPTION CHAOS',
     subtitle: 'Meme & Situation Captions',
     description: 'Get a chaotic real-life scenario and write the funniest caption. Group votes for the crown.',
+    shortDescription: 'Write the funniest caption.',
     iconName: 'Camera',
     badge: 'MEME JURY',
     accentColor: 'cyan',
