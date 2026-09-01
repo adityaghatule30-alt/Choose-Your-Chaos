@@ -1,16 +1,42 @@
-﻿'use client'
+'use client'
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { useAuth } from '@/components/AuthProvider'
-import { Users, Plus, ArrowLeft, Flame, Sparkles } from 'lucide-react'
+import { GAME_DEFINITIONS, GameMode } from '@/lib/games/definitions'
+import {
+  Users,
+  ArrowLeft,
+  Play,
+  Sparkles,
+  Skull,
+  ShieldAlert,
+  UserCheck,
+  Eye,
+  Flame,
+  HelpCircle,
+  Camera,
+} from 'lucide-react'
+
+const ICONS_MAP: Record<string, any> = {
+  Play,
+  Sparkles,
+  Skull,
+  ShieldAlert,
+  UserCheck,
+  Eye,
+  Flame,
+  HelpCircle,
+  Camera,
+}
 
 export default function CreateRoomPage() {
   const { user } = useAuth()
   const router = useRouter()
 
   const [name, setName] = useState('')
+  const [selectedGame, setSelectedGame] = useState<GameMode>('either_or')
   const [rounds, setRounds] = useState(5)
   const [creating, setCreating] = useState(false)
   const [errorMsg, setErrorMsg] = useState<string | null>(null)
@@ -30,7 +56,8 @@ export default function CreateRoomPage() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          name: name.trim() || 'Chaos Arena',
+          name: name.trim() || `${GAME_DEFINITIONS[selectedGame].title} Match`,
+          game_mode: selectedGame,
           total_rounds: rounds,
         }),
       })
@@ -50,7 +77,7 @@ export default function CreateRoomPage() {
   }
 
   return (
-    <div className="max-w-xl mx-auto px-4 py-8 sm:py-16">
+    <div className="max-w-2xl mx-auto px-4 py-8 sm:py-12">
       <Link
         href="/rooms"
         className="inline-flex items-center gap-2 text-xs font-bold text-neutral-400 hover:text-white mb-6 transition-colors"
@@ -65,8 +92,8 @@ export default function CreateRoomPage() {
           <div className="inline-flex p-3 bg-purple-950/60 border border-purple-800 rounded-2xl mb-3 shadow-inner">
             <Users className="w-8 h-8 text-purple-400" />
           </div>
-          <h1 className="text-2xl font-black text-white tracking-tight">CREATE CHAOS ROOM</h1>
-          <p className="text-xs text-neutral-400 mt-1">Host a private match with your squad</p>
+          <h1 className="text-2xl sm:text-3xl font-black text-white tracking-tight">CREATE CHAOS MATCH</h1>
+          <p className="text-xs text-neutral-400 mt-1">Select a game mode and host a private match with your squad</p>
         </div>
 
         {errorMsg && (
@@ -76,6 +103,44 @@ export default function CreateRoomPage() {
         )}
 
         <form onSubmit={handleCreate} className="space-y-6">
+          {/* Game Mode Selector */}
+          <div>
+            <label className="block text-xs font-bold uppercase tracking-wider text-neutral-300 mb-2.5">
+              Select Game Mode
+            </label>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 max-h-80 overflow-y-auto pr-1">
+              {Object.values(GAME_DEFINITIONS).map((g) => {
+                const Icon = ICONS_MAP[g.iconName] || Play
+                const isSelected = selectedGame === g.id
+
+                return (
+                  <button
+                    key={g.id}
+                    type="button"
+                    onClick={() => setSelectedGame(g.id)}
+                    className={`p-3.5 rounded-2xl border text-left transition-all cursor-pointer flex items-start gap-3 ${
+                      isSelected
+                        ? 'bg-purple-600/20 border-purple-500 ring-2 ring-purple-500/30'
+                        : 'bg-neutral-950 border-neutral-800 hover:border-neutral-700'
+                    }`}
+                  >
+                    <div className={`p-2 rounded-xl bg-neutral-900 border border-neutral-800 shrink-0 ${
+                      isSelected ? 'text-purple-400' : 'text-neutral-400'
+                    }`}>
+                      <Icon className="w-4 h-4" />
+                    </div>
+                    <div>
+                      <div className="text-xs font-black text-white">{g.title}</div>
+                      <div className="text-[11px] text-neutral-400 leading-tight mt-0.5 line-clamp-1">
+                        {g.description}
+                      </div>
+                    </div>
+                  </button>
+                )
+              })}
+            </div>
+          </div>
+
           <div>
             <label className="block text-xs font-bold uppercase tracking-wider text-neutral-300 mb-1.5">
               Room Name
@@ -118,7 +183,7 @@ export default function CreateRoomPage() {
             disabled={creating}
             className="w-full py-4 px-6 bg-purple-600 hover:bg-purple-500 text-white font-black text-sm uppercase tracking-wider rounded-xl shadow-xl shadow-purple-600/25 transition-all transform active:scale-95 disabled:opacity-50 cursor-pointer"
           >
-            {creating ? 'GENERATING ROOM...' : 'CREATE ROOM LOBBY 🚀'}
+            {creating ? 'GENERATING MATCH LOBBY...' : 'LAUNCH MATCH LOBBY 🚀'}
           </button>
         </form>
       </div>

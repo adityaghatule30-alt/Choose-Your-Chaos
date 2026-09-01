@@ -1,4 +1,15 @@
-﻿export interface RoomMember {
+export type GameMode =
+  | 'either_or'
+  | 'mind_reader'
+  | 'worst_answer'
+  | 'whos_lying'
+  | 'imposter'
+  | 'guess_player'
+  | 'chain_reaction'
+  | 'two_truths'
+  | 'caption_chaos'
+
+export interface RoomMember {
   id: string
   room_id: string
   user_id: string
@@ -15,10 +26,14 @@ export interface RoomRound {
   id: string
   room_id: string
   round_number: number
-  question_id: string
+  question_id?: string | null
   status: 'waiting' | 'active' | 'revealing' | 'completed'
   started_at: string | null
   ended_at: string | null
+  prompt_data?: any
+  target_user_id?: string | null
+  target_user_name?: string | null
+  is_imposter?: boolean
   question?: {
     id: string
     question: string
@@ -30,8 +45,14 @@ export interface RoomRound {
   answers?: Array<{
     user_id: string
     display_name: string
-    answer: 'A' | 'B'
+    answer: string
+    metadata?: any
   }>
+  votes?: Array<{
+    voter_id: string
+    target_id: string
+  }>
+  chaos_ai_comment?: string | null
   stats?: {
     count_a: number
     count_b: number
@@ -46,6 +67,7 @@ export interface Room {
   code: string
   name: string
   host_id: string
+  game_mode: GameMode
   status: 'waiting' | 'playing' | 'finished' | 'cancelled'
   max_players: number
   current_round: number
@@ -55,6 +77,7 @@ export interface Room {
   ended_at: string | null
   members?: RoomMember[]
   current_round_data?: RoomRound | null
-  user_answer?: 'A' | 'B' | null
+  user_answer?: string | null
+  user_vote?: string | null
   is_host?: boolean
 }

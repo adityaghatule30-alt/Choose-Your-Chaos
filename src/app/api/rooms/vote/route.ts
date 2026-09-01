@@ -13,16 +13,15 @@ export async function POST(request: Request) {
     }
 
     const body = await request.json()
-    const { round_id, answer, metadata } = body
+    const { round_id, target_id } = body
 
-    if (!round_id || !answer || typeof answer !== 'string') {
+    if (!round_id || !target_id) {
       return NextResponse.json({ success: false, error: 'INVALID_INPUT' }, { status: 400 })
     }
 
-    const { data, error } = await supabase.rpc('submit_room_answer', {
+    const { data, error } = await supabase.rpc('submit_room_vote', {
       p_round_id: round_id,
-      p_answer: answer.trim(),
-      p_metadata: metadata || {},
+      p_target_id: String(target_id),
     })
 
     if (error) {

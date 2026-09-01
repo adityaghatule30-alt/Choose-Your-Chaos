@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { useAuth } from '@/components/AuthProvider'
 import { Room } from '@/types/rooms'
+import { GAME_DEFINITIONS } from '@/lib/games/definitions'
 import { createClient } from '@/lib/supabase/client'
 import { Avatar } from '@/components/Avatar'
 import {
@@ -18,6 +19,12 @@ import {
   Eye,
   WifiOff,
   RefreshCw,
+  Send,
+  HelpCircle,
+  Skull,
+  Camera,
+  ShieldAlert,
+  UserCheck,
 } from 'lucide-react'
 
 type RealtimeStatus = 'CONNECTING' | 'LIVE REALTIME' | 'RECONNECTING' | 'OFFLINE'
@@ -30,8 +37,10 @@ export default function RoomGameplayPage({ params }: { params: Promise<{ code: s
   const router = useRouter()
 
   const [room, setRoom] = useState<Room | null>(null)
-  const [selectedChoice, setSelectedChoice] = useState<'A' | 'B' | null>(null)
-  const [answering, setAnswering] = useState(false)
+  const [selectedChoice, setSelectedChoice] = useState<string | null>(null)
+  const [textInput, setTextInput] = useState('')
+  const [selectedVote, setSelectedVote] = useState<string | null>(null)
+  const [submitting, setSubmitting] = useState(false)
   const [revealing, setRevealing] = useState(false)
   const [advancing, setAdvancing] = useState(false)
   const [loading, setLoading] = useState(true)
@@ -61,6 +70,9 @@ export default function RoomGameplayPage({ params }: { params: Promise<{ code: s
         setRoom(data.room)
         if (data.room.user_answer) {
           setSelectedChoice(data.room.user_answer)
+        }
+        if (data.room.user_vote) {
+          setSelectedVote(data.room.user_vote)
         }
         if (data.room.status === 'finished') {
           router.push(`/rooms/${roomCode}/results`)
@@ -101,6 +113,9 @@ export default function RoomGameplayPage({ params }: { params: Promise<{ code: s
       .on('postgres_changes', { event: '*', schema: 'public', table: 'room_answers' }, () => {
         loadRoomState()
       })
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'room_votes' }, () => {
+        loadRoomState()
+      })
       .on(
         'postgres_changes',
         { event: '*', schema: 'public', table: 'rooms', filter: `code=eq.${roomCode}` },
@@ -124,12 +139,11 @@ export default function RoomGameplayPage({ params }: { params: Promise<{ code: s
         }
       })
 
-    // Resync every 4s for network resilience
     const pollInterval = setInterval(() => {
       if (document.visibilityState === 'visible') {
         loadRoomState()
       }
-    }, 4000)
+    }, 3500)
 
     const handleFocus = () => {
       if (document.visibilityState === 'visible') {
@@ -148,12 +162,13 @@ export default function RoomGameplayPage({ params }: { params: Promise<{ code: s
     }
   }, [user, roomCode, router, loadRoomState])
 
-  // Handle player choice submission
-  const handleSelectChoice = async (choice: 'A' | 'B') => {
-    if (!room?.current_round_data || answering || selectedChoice) return
+  // Submit text or choice answer
+  const handleSubmitAnswer = async (answerVal: string) => {
+    if (!room?.current_round_data || submitting || selectedChoice) return
+    if (!answerVal.trim()) return
 
-    setSelectedChoice(choice)
-    setAnswering(true)
+    setSelectedChoice(answerVal)
+    setSubmitting(true)
     setErrorMsg(null)
 
     try {
@@ -162,31 +177,62 @@ export default function RoomGameplayPage({ params }: { params: Promise<{ code: s
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           round_id: room.current_round_data.id,
-          answer: choice,
+          answer: answerVal.trim(),
         }),
       })
-
       const data = await res.json()
-      if (!data.success) {
-        setErrorMsg(data.message || 'Failed to submit answer.')
-        setSelectedChoice(null)
-      } else {
+      if (data.success) {
+        setTextInput('')
         loadRoomState()
+      } else {
+        setErrorMsg(data.message || 'Failed to record answer.')
+        setSelectedChoice(null)
       }
     } catch {
-      setErrorMsg('Network error locking in answer.')
+      setErrorMsg('Network error submitting answer.')
       setSelectedChoice(null)
     } finally {
-      if (isMountedRef.current) {
-        setAnswering(false)
-      }
+      if (isMountedRef.current) setSubmitting(false)
     }
   }
 
-  // Host action to reveal votes
-  const handleRevealRound = async () => {
+  // Submit vote for imposter, lie, worst answer, or caption
+  const handleVote = async (targetId: string) => {
+    if (!room?.current_round_data || submitting || selectedVote) return
+
+    setSelectedVote(targetId)
+    setSubmitting(true)
+    setErrorMsg(null)
+
+    try {
+      const res = await fetch('/api/rooms/vote', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          round_id: room.current_round_data.id,
+          target_id: targetId,
+        }),
+      })
+      const data = await res.json()
+      if (data.success) {
+        loadRoomState()
+      } else {
+        setErrorMsg(data.message || 'Failed to submit vote.')
+        setSelectedVote(null)
+      }
+    } catch {
+      setErrorMsg('Network error submitting vote.')
+      setSelectedVote(null)
+    } finally {
+      if (isMountedRef.current) setSubmitting(false)
+    }
+  }
+
+  // Reveal results (Host only)
+  const handleReveal = async () => {
     if (!room?.current_round_data || revealing || !room.is_host) return
     setRevealing(true)
+    setErrorMsg(null)
 
     try {
       const res = await fetch('/api/rooms/reveal', {
@@ -197,18 +243,24 @@ export default function RoomGameplayPage({ params }: { params: Promise<{ code: s
       const data = await res.json()
       if (data.success) {
         loadRoomState()
+      } else {
+        setErrorMsg(data.message || 'Failed to reveal answers.')
       }
-    } catch {} finally {
-      if (isMountedRef.current) {
-        setRevealing(false)
-      }
+    } catch {
+      setErrorMsg('Network error revealing answers.')
+    } finally {
+      if (isMountedRef.current) setRevealing(false)
     }
   }
 
-  // Host action to advance to next round
-  const handleAdvanceRound = async () => {
+  // Advance to next round (Host only)
+  const handleNextRound = async () => {
     if (!room || advancing || !room.is_host) return
     setAdvancing(true)
+    setSelectedChoice(null)
+    setSelectedVote(null)
+    setTextInput('')
+    setErrorMsg(null)
 
     try {
       const res = await fetch('/api/rooms/advance', {
@@ -221,56 +273,75 @@ export default function RoomGameplayPage({ params }: { params: Promise<{ code: s
         if (data.finished) {
           router.push(`/rooms/${roomCode}/results`)
         } else {
-          setSelectedChoice(null)
           loadRoomState()
         }
+      } else {
+        setErrorMsg(data.message || 'Failed to advance to next round.')
       }
-    } catch {} finally {
-      if (isMountedRef.current) {
-        setAdvancing(false)
-      }
+    } catch {
+      setErrorMsg('Network error advancing round.')
+    } finally {
+      if (isMountedRef.current) setAdvancing(false)
     }
   }
 
-  if (loading || !room?.current_round_data) {
+  if (loading) {
     return (
       <div className="min-h-[calc(100vh-4rem)] flex flex-col items-center justify-center gap-3">
         <Flame className="w-12 h-12 text-yellow-400 animate-bounce" />
         <span className="text-xs font-black uppercase tracking-widest text-neutral-400">
-          Loading Round Arena...
+          Summoning Chaos Match...
         </span>
       </div>
     )
   }
 
-  const round = room.current_round_data
-  const isRevealed = round.status === 'revealing' || round.status === 'completed'
+  if (!room || !room.current_round_data) {
+    return (
+      <div className="max-w-md mx-auto px-4 py-16 text-center animate-pop-in">
+        <div className="w-16 h-16 rounded-3xl bg-neutral-900 border border-neutral-800 flex items-center justify-center text-3xl mx-auto mb-4 shadow-xl">
+          💀
+        </div>
+        <h2 className="text-2xl font-black text-white">Round Not Found</h2>
+        <p className="text-neutral-400 text-xs mt-2 mb-6">
+          This match might have ended or is waiting for players in the lobby.
+        </p>
+        <Link
+          href={`/rooms/${roomCode}`}
+          className="inline-flex items-center gap-2 px-6 py-3.5 bg-yellow-400 hover:bg-yellow-300 text-neutral-950 font-black text-xs uppercase tracking-wider rounded-2xl shadow-xl shadow-yellow-500/20 transition-all hover:scale-105"
+        >
+          Return to Room Lobby
+        </Link>
+      </div>
+    )
+  }
+
   const isHost = room.is_host
-  const totalMembers = room.members?.length || 0
-  const answersCount = round.answers_count || 0
+  const currentRound = room.current_round_data
+  const isRevealed = currentRound.status === 'revealing' || currentRound.status === 'completed'
+  const members = room.members || []
+  const totalMembers = members.length
+  const answersCount = currentRound.answers_count || 0
+  const allAnswered = answersCount >= totalMembers
+  const gameMode = room.game_mode || 'either_or'
+  const gameDef = GAME_DEFINITIONS[gameMode] || GAME_DEFINITIONS.either_or
+  const isTarget = currentRound.target_user_id === user?.id
+  const promptData = currentRound.prompt_data || {}
 
   return (
-    <div className="max-w-3xl mx-auto px-4 py-8 sm:py-12 animate-pop-in">
-      {/* Top Game Bar */}
-      <div className="flex flex-wrap items-center justify-between gap-3 mb-6 bg-neutral-900/90 backdrop-blur-md border border-neutral-800 rounded-3xl px-5 py-3 shadow-xl">
-        <div className="flex items-center gap-3">
-          <span className="text-xs font-black bg-yellow-400 text-neutral-950 px-3 py-1 rounded-xl shadow-sm">
-            ROUND {round.round_number} / {room.total_rounds}
-          </span>
-          <span className="text-xs font-black text-white truncate max-w-[140px] sm:max-w-[200px]">
-            {room.name}
+    <div className="max-w-3xl mx-auto px-4 py-6 sm:py-10 animate-pop-in">
+      {/* Header Bar */}
+      <div className="flex items-center justify-between mb-4">
+        <div className="flex items-center gap-2">
+          <span className="px-3 py-1 bg-neutral-900 border border-neutral-800 text-white font-black text-xs rounded-full uppercase tracking-wider flex items-center gap-1.5 shadow-inner">
+            <Sparkles className="w-3.5 h-3.5 text-yellow-400" />
+            {gameDef.title} • ROUND {room.current_round}/{room.total_rounds}
           </span>
         </div>
 
-        <div className="flex items-center gap-3 text-xs font-bold text-neutral-400">
-          <div className="flex items-center gap-1.5 px-3 py-1 bg-neutral-950 rounded-full border border-neutral-800">
-            <Users className="w-3.5 h-3.5 text-purple-400" />
-            <span className="text-white font-black">{answersCount}</span>
-            <span>/ {totalMembers} Answered</span>
-          </div>
-
+        <div className="flex items-center gap-2">
           <div
-            className={`px-2.5 py-0.5 rounded-full border text-[10px] font-black flex items-center gap-1 ${
+            className={`px-3 py-1 rounded-full border text-[11px] font-black flex items-center gap-1.5 transition-all ${
               realtimeStatus === 'LIVE REALTIME'
                 ? 'bg-emerald-950/60 border-emerald-800/80 text-emerald-400'
                 : 'bg-yellow-950/60 border-yellow-800/80 text-yellow-400'
@@ -278,199 +349,234 @@ export default function RoomGameplayPage({ params }: { params: Promise<{ code: s
           >
             {realtimeStatus === 'LIVE REALTIME' ? (
               <>
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-                <span>LIVE</span>
+                <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+                <span>SYNCED</span>
               </>
             ) : (
-              <span>SYNC</span>
+              <span>{realtimeStatus}</span>
             )}
           </div>
         </div>
       </div>
 
       {errorMsg && (
-        <div className="mb-6 p-4 bg-red-950/60 border border-red-800/80 rounded-2xl text-red-300 text-xs flex items-center gap-2 animate-shake">
+        <div className="mb-4 p-4 bg-red-950/60 border border-red-800/80 rounded-2xl text-red-300 text-xs flex items-center gap-2.5 animate-shake">
           <AlertCircle className="w-4 h-4 shrink-0" />
           <span>{errorMsg}</span>
         </div>
       )}
 
-      {/* Question Card */}
-      <div className="bg-neutral-900 border border-neutral-800 rounded-3xl p-6 sm:p-10 shadow-2xl relative overflow-hidden text-center mb-6">
+      {/* Main Game Screen */}
+      <div className="bg-neutral-900/90 backdrop-blur-xl border border-neutral-800 rounded-3xl p-6 sm:p-10 shadow-2xl relative overflow-hidden mb-6">
         <div className="absolute top-0 right-0 w-64 h-64 bg-purple-500/10 rounded-full blur-3xl -z-10" />
-        <div className="inline-flex items-center gap-1 px-3 py-1 bg-yellow-400/10 border border-yellow-400/30 text-yellow-400 text-xs font-black rounded-full uppercase tracking-wider mb-4">
-          <Sparkles className="w-3.5 h-3.5" /> CHOOSE YOUR SIDE
-        </div>
-        <h2 className="text-xl sm:text-3xl font-black text-white leading-relaxed">
-          "{round.question?.question}"
-        </h2>
-      </div>
 
-      {/* Choices Grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
-        {/* OPTION A */}
-        <button
-          onClick={() => handleSelectChoice('A')}
-          disabled={answering || Boolean(selectedChoice) || isRevealed}
-          className={`p-6 sm:p-8 rounded-3xl border text-left font-bold transition-all transform active:scale-98 relative overflow-hidden flex flex-col justify-between min-h-[170px] ${
-            selectedChoice === 'A'
-              ? 'bg-yellow-400 text-neutral-950 border-yellow-300 ring-4 ring-yellow-400/30 scale-[1.02] shadow-xl'
-              : isRevealed
-              ? 'bg-neutral-900/60 border-neutral-800 text-neutral-300'
-              : 'bg-neutral-900 hover:bg-neutral-850 text-white border-neutral-800 hover:border-yellow-400/60 cursor-pointer shadow-lg hover:scale-[1.01]'
-          }`}
-        >
-          <div>
-            <div
-              className={`text-xs font-black uppercase tracking-wider mb-2 flex justify-between ${
-                selectedChoice === 'A' ? 'text-neutral-950' : 'text-yellow-400'
+        {/* 1. Mind Reader Mode */}
+        {gameMode === 'mind_reader' && (
+          <div className="text-center mb-6">
+            <span className="text-[10px] font-black uppercase text-purple-400 tracking-widest block mb-1">
+              {isTarget ? '🎯 YOU ARE THE SPOTLIGHT TARGET' : `🧠 TARGET: ${currentRound.target_user_name}`}
+            </span>
+            <h1 className="text-xl sm:text-2xl font-black text-white leading-snug">
+              {isTarget
+                ? `Choose what YOU would do:`
+                : `What will ${currentRound.target_user_name} choose?`}
+            </h1>
+            <p className="text-xs text-neutral-400 mt-1 font-bold">
+              "{currentRound.question?.question || 'Would you rather...'}"
+            </p>
+          </div>
+        )}
+
+        {/* 2. Worst Answer Wins / Caption Chaos */}
+        {(gameMode === 'worst_answer' || gameMode === 'caption_chaos') && (
+          <div className="text-center mb-6">
+            <span className="text-[10px] font-black uppercase text-red-400 tracking-widest block mb-1">
+              {gameMode === 'worst_answer' ? '💀 WORST ANSWER CHALLENGE' : '📸 CAPTION CHALLENGE'}
+            </span>
+            <h1 className="text-xl sm:text-2xl font-black text-white leading-snug">
+              "{promptData.prompt || currentRound.question?.question || 'Give your most unhinged answer'}"
+            </h1>
+          </div>
+        )}
+
+        {/* 3. Imposter Mode */}
+        {gameMode === 'imposter' && (
+          <div className="text-center mb-6">
+            <span className="text-[10px] font-black uppercase text-pink-400 tracking-widest block mb-1">
+              {currentRound.is_imposter ? '🕵️ YOU ARE THE SECRET IMPOSTER' : '🎭 SQUAD MEMBER'}
+            </span>
+            <h1 className="text-xl sm:text-2xl font-black text-white leading-snug">
+              "{currentRound.is_imposter ? promptData.imposterPrompt : promptData.crewPrompt || 'Answer the prompt'}"
+            </h1>
+            <p className="text-xs text-neutral-400 mt-1">
+              {currentRound.is_imposter
+                ? 'Blend in! Others got a different prompt.'
+                : 'Everyone except 1 person has this exact prompt.'}
+            </p>
+          </div>
+        )}
+
+        {/* 4. Guess The Player / Chain Reaction / Two Truths */}
+        {(gameMode === 'guess_player' || gameMode === 'chain_reaction' || gameMode === 'two_truths') && (
+          <div className="text-center mb-6">
+            <span className="text-[10px] font-black uppercase text-yellow-400 tracking-widest block mb-1">
+              {gameMode === 'chain_reaction' ? '🧨 CHAIN REACTION STORY' : gameDef.badge}
+            </span>
+            <h1 className="text-xl sm:text-2xl font-black text-white leading-snug">
+              "{promptData.prompt || promptData.starter || promptData.situation || 'Squad Challenge'}"
+            </h1>
+          </div>
+        )}
+
+        {/* 5. Either / Or Default Setup */}
+        {gameMode === 'either_or' && (
+          <div className="text-center mb-6">
+            <span className="text-[10px] font-black uppercase text-yellow-400 tracking-widest block mb-1">
+              WOULD YOU RATHER...
+            </span>
+            <h1 className="text-xl sm:text-3xl font-black text-white leading-snug">
+              "{currentRound.question?.question}"
+            </h1>
+          </div>
+        )}
+
+        {/* Interactive Play Controls */}
+
+        {/* Binary Choices (Either/Or, Mind Reader) */}
+        {(gameMode === 'either_or' || gameMode === 'mind_reader') && currentRound.question && (
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
+            <button
+              onClick={() => handleSubmitAnswer('A')}
+              disabled={submitting || Boolean(selectedChoice)}
+              className={`p-6 rounded-3xl border text-left font-bold transition-all duration-200 active-press relative overflow-hidden flex flex-col justify-between min-h-[160px] shadow-xl ${
+                selectedChoice === 'A'
+                  ? 'bg-yellow-400 text-neutral-950 border-yellow-300 ring-4 ring-yellow-400/30 scale-[1.02]'
+                  : 'bg-neutral-950 hover:bg-neutral-850 text-white border-neutral-800 hover:border-yellow-400/60 cursor-pointer'
               }`}
             >
-              <span>OPTION A</span>
-              {selectedChoice === 'A' && (
-                <span className="text-[10px] font-black bg-neutral-950 text-yellow-400 px-2 py-0.5 rounded-full">
-                  LOCKED IN
+              <div>
+                <span className={`text-[10px] font-black uppercase tracking-wider block mb-1.5 ${
+                  selectedChoice === 'A' ? 'text-neutral-950' : 'text-yellow-400'
+                }`}>
+                  OPTION A
                 </span>
-              )}
-            </div>
-            <div className="text-base sm:text-lg font-bold leading-snug">
-              {round.question?.option_a}
-            </div>
-          </div>
-
-          {/* Reveal stats */}
-          {isRevealed && round.stats && (
-            <div className="mt-4 pt-3 border-t border-neutral-800/60">
-              <div className="flex justify-between items-center text-xs font-black mb-1">
-                <span>{round.stats.percent_a}% CHOSE A</span>
-                <span className="text-[10px] opacity-70">({round.stats.count_a} votes)</span>
+                <span className="text-base sm:text-lg font-bold leading-snug">
+                  {currentRound.question.option_a}
+                </span>
               </div>
-              <div className="w-full h-2.5 bg-neutral-950 rounded-full overflow-hidden">
-                <div
-                  className="h-full bg-yellow-400 rounded-full transition-all duration-700"
-                  style={{ width: `${round.stats.percent_a}%` }}
-                />
-              </div>
-            </div>
-          )}
-        </button>
+            </button>
 
-        {/* OPTION B */}
-        <button
-          onClick={() => handleSelectChoice('B')}
-          disabled={answering || Boolean(selectedChoice) || isRevealed}
-          className={`p-6 sm:p-8 rounded-3xl border text-left font-bold transition-all transform active:scale-98 relative overflow-hidden flex flex-col justify-between min-h-[170px] ${
-            selectedChoice === 'B'
-              ? 'bg-gradient-to-r from-pink-600 to-purple-600 text-white border-pink-400 ring-4 ring-pink-500/30 scale-[1.02] shadow-xl'
-              : isRevealed
-              ? 'bg-neutral-900/60 border-neutral-800 text-neutral-300'
-              : 'bg-neutral-900 hover:bg-neutral-850 text-white border-neutral-800 hover:border-pink-400/60 cursor-pointer shadow-lg hover:scale-[1.01]'
-          }`}
-        >
-          <div>
-            <div
-              className={`text-xs font-black uppercase tracking-wider mb-2 flex justify-between ${
-                selectedChoice === 'B' ? 'text-white' : 'text-pink-400'
+            <button
+              onClick={() => handleSubmitAnswer('B')}
+              disabled={submitting || Boolean(selectedChoice)}
+              className={`p-6 rounded-3xl border text-left font-bold transition-all duration-200 active-press relative overflow-hidden flex flex-col justify-between min-h-[160px] shadow-xl ${
+                selectedChoice === 'B'
+                  ? 'bg-red-500 text-white border-red-400 ring-4 ring-red-500/30 scale-[1.02]'
+                  : 'bg-neutral-950 hover:bg-neutral-850 text-white border-neutral-800 hover:border-red-400/60 cursor-pointer'
               }`}
             >
-              <span>OPTION B</span>
-              {selectedChoice === 'B' && (
-                <span className="text-[10px] font-black bg-neutral-950 text-pink-400 px-2 py-0.5 rounded-full">
-                  LOCKED IN
+              <div>
+                <span className={`text-[10px] font-black uppercase tracking-wider block mb-1.5 ${
+                  selectedChoice === 'B' ? 'text-white' : 'text-red-400'
+                }`}>
+                  OPTION B
                 </span>
-              )}
-            </div>
-            <div className="text-base sm:text-lg font-bold leading-snug">
-              {round.question?.option_b}
-            </div>
+                <span className="text-base sm:text-lg font-bold leading-snug">
+                  {currentRound.question.option_b}
+                </span>
+              </div>
+            </button>
           </div>
+        )}
 
-          {/* Reveal stats */}
-          {isRevealed && round.stats && (
-            <div className="mt-4 pt-3 border-t border-neutral-800/60">
-              <div className="flex justify-between items-center text-xs font-black mb-1">
-                <span>{round.stats.percent_b}% CHOSE B</span>
-                <span className="text-[10px] opacity-70">({round.stats.count_b} votes)</span>
-              </div>
-              <div className="w-full h-2.5 bg-neutral-950 rounded-full overflow-hidden">
+        {/* Text Input for Custom Answer Games */}
+        {gameMode !== 'either_or' && gameMode !== 'mind_reader' && !selectedChoice && (
+          <form
+            onSubmit={(e) => {
+              e.preventDefault()
+              handleSubmitAnswer(textInput)
+            }}
+            className="mb-6 space-y-3"
+          >
+            <textarea
+              value={textInput}
+              onChange={(e) => setTextInput(e.target.value)}
+              placeholder="Type your unhinged answer here..."
+              maxLength={140}
+              rows={3}
+              disabled={submitting}
+              className="w-full bg-neutral-950 border border-neutral-800 rounded-2xl p-4 text-white text-sm focus:outline-none focus:border-yellow-400 transition-colors resize-none"
+            />
+            <button
+              type="submit"
+              disabled={submitting || !textInput.trim()}
+              className="w-full py-3.5 px-6 bg-yellow-400 hover:bg-yellow-300 text-neutral-950 font-black text-xs uppercase tracking-wider rounded-xl transition-all active-press disabled:opacity-50 flex items-center justify-center gap-2 cursor-pointer shadow-lg shadow-yellow-500/20"
+            >
+              <Send className="w-4 h-4" /> LOCK IN MY ANSWER 🔥
+            </button>
+          </form>
+        )}
+
+        {/* Voting & Anonymized Answers Display */}
+        {selectedChoice && !isRevealed && (
+          <div className="p-4 bg-neutral-950 border border-neutral-800 rounded-2xl mb-6 text-center animate-fade-in">
+            <span className="text-xs font-black text-yellow-400 flex items-center justify-center gap-1.5">
+              <CheckCircle2 className="w-4 h-4 text-emerald-400" /> YOUR ANSWER IS LOCKED IN
+            </span>
+            <p className="text-[11px] text-neutral-400 mt-1">
+              Waiting for all players ({answersCount}/{totalMembers}) to finish before reveal.
+            </p>
+          </div>
+        )}
+
+        {/* Revealed Results / Voting Grid */}
+        {isRevealed && currentRound.answers && currentRound.answers.length > 0 && (
+          <div className="space-y-3 mb-6 animate-pop-in">
+            <span className="text-[11px] font-black uppercase text-neutral-400 tracking-wider block mb-2 text-center">
+              🎉 SQUAD ANSWERS & REVEAL
+            </span>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              {currentRound.answers.map((ans, idx) => (
                 <div
-                  className="h-full bg-pink-500 rounded-full transition-all duration-700"
-                  style={{ width: `${round.stats.percent_b}%` }}
-                />
-              </div>
-            </div>
-          )}
-        </button>
-      </div>
-
-      {/* Players Selection Breakdown after Reveal */}
-      {isRevealed && round.answers && (
-        <div className="bg-neutral-900 border border-neutral-800 rounded-3xl p-6 shadow-2xl mb-6 animate-pop-in">
-          <h4 className="text-xs font-black uppercase text-neutral-400 tracking-wider mb-4 flex items-center gap-1.5">
-            <Eye className="w-4 h-4 text-yellow-400" /> SQUAD VOTES REVEALED
-          </h4>
-
-          <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5">
-            {round.answers.map((ans, idx) => (
-              <div
-                key={idx}
-                className="p-3 bg-neutral-950 rounded-2xl border border-neutral-800 flex items-center justify-between"
-              >
-                <span className="text-xs font-bold text-white truncate max-w-[100px]">
-                  {ans.display_name}
-                </span>
-                <span
-                  className={`text-xs font-black px-2.5 py-0.5 rounded-lg ${
-                    ans.answer === 'A'
-                      ? 'bg-yellow-400 text-neutral-950'
-                      : 'bg-pink-600 text-white'
-                  }`}
+                  key={idx}
+                  className="p-4 bg-neutral-950 border border-neutral-800 rounded-2xl flex items-center justify-between"
                 >
-                  {ans.answer}
-                </span>
-              </div>
-            ))}
+                  <div>
+                    <span className="text-[10px] text-purple-400 font-bold uppercase block">
+                      {ans.display_name}
+                    </span>
+                    <span className="text-sm font-black text-white">{ans.answer}</span>
+                  </div>
+                </div>
+              ))}
+            </div>
           </div>
-        </div>
-      )}
+        )}
 
-      {/* Host Controls & Readiness Indicators */}
-      <div className="bg-neutral-900 border border-neutral-800 rounded-3xl p-6 shadow-xl flex flex-col sm:flex-row items-center justify-between gap-4">
-        <div>
-          {!selectedChoice ? (
-            <div className="text-xs font-bold text-yellow-400 animate-pulse">
-              Lock in your choice above! ⚡
-            </div>
-          ) : !isRevealed ? (
-            <div className="text-xs font-bold text-emerald-400 flex items-center gap-1.5">
-              <CheckCircle2 className="w-4 h-4" /> Your vote is locked. Waiting for other players...
-            </div>
-          ) : (
-            <div className="text-xs font-bold text-purple-400 flex items-center gap-1.5">
-              <Sparkles className="w-4 h-4" /> Round complete! Points & XP distributed.
-            </div>
-          )}
-        </div>
-
+        {/* Host Controls */}
         {isHost && (
-          <div className="flex items-center gap-2 w-full sm:w-auto">
+          <div className="pt-4 border-t border-neutral-800/80 flex items-center justify-between">
+            <div className="text-xs text-neutral-400 font-bold flex items-center gap-2">
+              <Users className="w-4 h-4 text-purple-400" />
+              <span>{answersCount} of {totalMembers} submitted</span>
+            </div>
+
             {!isRevealed ? (
               <button
-                onClick={handleRevealRound}
-                disabled={revealing}
-                className="w-full sm:w-auto px-6 py-3.5 bg-yellow-400 hover:bg-yellow-300 text-neutral-950 font-black text-xs uppercase tracking-wider rounded-2xl shadow-lg shadow-yellow-500/20 transition-all cursor-pointer disabled:opacity-50"
+                onClick={handleReveal}
+                disabled={revealing || answersCount === 0}
+                className="px-5 py-3 bg-gradient-to-r from-purple-600 to-pink-600 hover:opacity-95 text-white font-black text-xs uppercase tracking-wider rounded-xl transition-all active-press disabled:opacity-50 cursor-pointer shadow-md"
               >
-                {revealing ? 'REVEALING...' : 'REVEAL VOTES 👁️'}
+                {revealing ? 'REVEALING...' : 'REVEAL SQUAD ANSWERS 👁️'}
               </button>
             ) : (
               <button
-                onClick={handleAdvanceRound}
+                onClick={handleNextRound}
                 disabled={advancing}
-                className="w-full sm:w-auto px-6 py-3.5 bg-gradient-to-r from-purple-600 to-pink-600 hover:opacity-95 text-white font-black text-xs uppercase tracking-wider rounded-2xl shadow-lg shadow-purple-600/20 transition-all cursor-pointer flex items-center justify-center gap-1.5 disabled:opacity-50"
+                className="px-6 py-3.5 bg-yellow-400 hover:bg-yellow-300 text-neutral-950 font-black text-xs uppercase tracking-wider rounded-xl transition-all active-press flex items-center gap-2 cursor-pointer shadow-lg shadow-yellow-500/20"
               >
-                <span>
-                  {round.round_number === room.total_rounds ? 'SEE FINAL RESULTS 🏆' : 'NEXT ROUND →'}
-                </span>
+                <span>{room.current_round >= room.total_rounds ? 'VIEW RESULTS 🏆' : 'NEXT ROUND ➔'}</span>
+                <ArrowRight className="w-4 h-4" />
               </button>
             )}
           </div>
