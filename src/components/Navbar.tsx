@@ -13,7 +13,6 @@ import {
   Settings,
   Gamepad2,
   Users,
-  Heart,
   Trophy,
   Award,
   BookOpen,
@@ -22,7 +21,6 @@ import {
   Shield,
   Menu,
   X,
-  Plus,
 } from 'lucide-react'
 
 export function Navbar() {
@@ -52,7 +50,6 @@ export function Navbar() {
     { href: '/', label: 'HOME', icon: Flame },
     { href: '/games', label: 'GAMES', icon: Gamepad2 },
     { href: '/rooms', label: 'ROOMS', icon: Users },
-    { href: '/couples', label: 'COUPLES', icon: Heart },
     { href: '/leaderboard', label: 'RANKINGS', icon: Trophy },
     { href: '/profile', label: 'PROFILE', icon: UserIcon },
   ]

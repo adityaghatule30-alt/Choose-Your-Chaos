@@ -1,4 +1,4 @@
-﻿import { MetadataRoute } from 'next'
+import { MetadataRoute } from 'next'
 
 export default function sitemap(): MetadataRoute.Sitemap {
   const baseUrl = 'https://chooseyourchaos.com'
@@ -9,10 +9,6 @@ export default function sitemap(): MetadataRoute.Sitemap {
     '/play',
     '/spotlight',
     '/judge-me',
-    '/couples',
-    '/couples/memory-lane',
-    '/couples/couple-chaos',
-    '/couples/ship-or-skip',
     '/rooms',
     '/leaderboard',
     '/achievements',

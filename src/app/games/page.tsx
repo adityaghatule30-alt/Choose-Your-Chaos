@@ -1,4 +1,4 @@
-﻿'use client'
+'use client'
 
 import Link from 'next/link'
 import {
@@ -6,7 +6,6 @@ import {
   Play,
   Flame,
   ShieldAlert,
-  Heart,
   Users,
   Sparkles,
   ArrowRight,
@@ -15,7 +14,7 @@ import {
 export default function GamesHubPage() {
   const games = [
     {
-      title: '🎲 EITHER / OR',
+      title: '🎮 EITHER / OR',
       subtitle: 'Binary Dilemmas & Global Votes',
       description: 'Vote on impossible scenarios. Reveal global statistics and deterministic witty reactions.',
       href: '/play',
@@ -41,7 +40,7 @@ export default function GamesHubPage() {
     {
       title: '⚖️ JUDGE ME COURT',
       subtitle: 'Public Trials & Moral Verdicts',
-      description: 'File your drama for public trial. The community casts verdicts: Innocent 😇, Guilty 😬, or Criminal 💀.',
+      description: 'File your drama for public trial. The community casts verdicts: Innocent 🕊️, Guilty ⚖️, or Criminal 🚨.',
       href: '/judge-me',
       color: 'red',
       border: 'hover:border-red-500/60',
@@ -49,18 +48,6 @@ export default function GamesHubPage() {
       accentText: 'text-red-400',
       bgGlow: 'bg-red-500/10',
       icon: ShieldAlert,
-    },
-    {
-      title: '❤️ COUPLES & DUOS',
-      subtitle: 'Memory Lane, Couple Chaos, Ship or Skip',
-      description: 'Test your shared memory, match simultaneous choices, and discover dramatic compatibility ratings.',
-      href: '/couples',
-      color: 'pink',
-      border: 'hover:border-pink-500/60',
-      badge: 'PAIRS & COUPLES',
-      accentText: 'text-pink-400',
-      bgGlow: 'bg-pink-500/10',
-      icon: Heart,
     },
     {
       title: '👥 FRIEND ROOMS',

@@ -1,4 +1,4 @@
-﻿'use client'
+'use client'
 
 import { useState } from 'react'
 import {
@@ -6,7 +6,6 @@ import {
   Play,
   Flame,
   ShieldAlert,
-  Heart,
   Users,
   Trophy,
   Award,
@@ -25,7 +24,6 @@ export default function GuidePage() {
     { id: 'truth-chaos', label: '🔥 Truth Chaos' },
     { id: 'judge-me', label: '⚖️ Judge Me Court' },
     { id: 'rooms', label: '👥 Friend Rooms' },
-    { id: 'couples', label: '❤️ Couples & Duos' },
     { id: 'progression', label: '⭐ XP & Chaos Score' },
     { id: 'ai', label: '🤖 Chaos AI' },
   ]
@@ -138,17 +136,6 @@ export default function GuidePage() {
           </div>
         )}
 
-        {activeTab === 'couples' && (
-          <div className="space-y-4 animate-pop-in">
-            <h2 className="text-xl font-black text-white flex items-center gap-2">
-              <Heart className="w-5 h-5 text-pink-400" /> Couples & Duos
-            </h2>
-            <p className="text-xs sm:text-sm text-neutral-300 leading-relaxed">
-              Features 3 unique modes: Memory Lane (testing telepathy), Couple Chaos (who is more chaotic?), and Ship or Skip (compatibility verdicts).
-            </p>
-          </div>
-        )}
-
         {activeTab === 'progression' && (
           <div className="space-y-4 animate-pop-in">
             <h2 className="text-xl font-black text-white flex items-center gap-2">
@@ -166,7 +153,7 @@ export default function GuidePage() {
               <Bot className="w-5 h-5 text-purple-400" /> Chaos AI Commentary
             </h2>
             <p className="text-xs sm:text-sm text-neutral-300 leading-relaxed">
-              Chaos AI occasionally interrupts spicy confessions, dramatic verdicts, and couples matches to deliver witty, sarcastic commentary.
+              Chaos AI occasionally interrupts spicy confessions, dramatic verdicts, and live matches to deliver witty, sarcastic commentary.
             </p>
           </div>
         )}

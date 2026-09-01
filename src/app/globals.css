@@ -1,4 +1,4 @@
-﻿@tailwind base;
+@tailwind base;
 @tailwind components;
 @tailwind utilities;
 
@@ -22,17 +22,14 @@ body {
   }
   50% {
     box-shadow: 0 0 45px rgba(249, 115, 22, 0.8), 0 0 90px rgba(239, 68, 68, 0.4);
-    transform: scale(1.06);
+    transform: scale(1.04);
   }
 }
 
 @keyframes popIn {
   0% {
     opacity: 0;
-    transform: scale(0.85) translateY(12px);
-  }
-  70% {
-    transform: scale(1.02) translateY(-2px);
+    transform: scale(0.92) translateY(8px);
   }
   100% {
     opacity: 1;
@@ -42,8 +39,8 @@ body {
 
 @keyframes reactionBounce {
   0% { transform: scale(1); }
-  35% { transform: scale(1.35) rotate(-6deg); }
-  65% { transform: scale(0.9) rotate(3deg); }
+  40% { transform: scale(1.28) rotate(-4deg); }
+  75% { transform: scale(0.95) rotate(2deg); }
   100% { transform: scale(1) rotate(0); }
 }
 
@@ -55,7 +52,7 @@ body {
 @keyframes slideInUp {
   0% {
     opacity: 0;
-    transform: translateY(20px);
+    transform: translateY(12px);
   }
   100% {
     opacity: 1;
@@ -63,42 +60,61 @@ body {
   }
 }
 
-@keyframes shakeGlitch {
-  0%, 100% { transform: translateX(0); }
-  20% { transform: translateX(-4px) rotate(-1deg); }
-  40% { transform: translateX(4px) rotate(1deg); }
-  60% { transform: translateX(-3px); }
-  80% { transform: translateX(3px); }
+@keyframes progressFill {
+  0% { width: 0%; opacity: 0.6; }
+  100% { opacity: 1; }
 }
 
-@keyframes heartPulse {
-  0%, 100% { transform: scale(1); }
-  50% { transform: scale(1.25); filter: drop-shadow(0 0 15px rgba(239, 68, 68, 0.8)); }
+@keyframes badgePulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.75; transform: scale(0.96); }
+}
+
+@keyframes shakeGlitch {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-3px); }
+  50% { transform: translateX(3px); }
+  75% { transform: translateX(-2px); }
 }
 
 /* Helper Animation Utility Classes */
 .animate-spotlight-glow {
   animation: spotlightGlow 2.5s infinite ease-in-out;
+  will-change: transform, box-shadow;
 }
 
 .animate-pop-in {
-  animation: popIn 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  animation: popIn 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  will-change: transform, opacity;
 }
 
 .animate-reaction-bounce {
-  animation: reactionBounce 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  animation: reactionBounce 0.35s cubic-bezier(0.175, 0.885, 0.32, 1.275);
 }
 
 .animate-slide-up {
-  animation: slideInUp 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  animation: slideInUp 0.22s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  will-change: transform, opacity;
 }
 
 .animate-shake {
-  animation: shakeGlitch 0.4s ease-in-out;
+  animation: shakeGlitch 0.3s ease-in-out;
 }
 
-.animate-heart-pulse {
-  animation: heartPulse 1.2s infinite ease-in-out;
+.animate-progress-fill {
+  animation: progressFill 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.animate-badge-pulse {
+  animation: badgePulse 2s infinite ease-in-out;
+}
+
+/* High-performance micro-interaction helpers */
+.active-press {
+  transition: transform 0.1s ease, filter 0.1s ease;
+}
+.active-press:active {
+  transform: scale(0.97);
 }
 
 /* Reduced motion preference */

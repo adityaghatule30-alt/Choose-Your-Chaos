@@ -1,4 +1,4 @@
-﻿'use client'
+'use client'
 
 import { useEffect, useState, useRef } from 'react'
 import { useRouter } from 'next/navigation'
@@ -215,12 +215,12 @@ export default function PlayPage() {
             <button
               onClick={() => handleVote('A')}
               disabled={voting || Boolean(voteResult)}
-              className={`p-6 sm:p-8 rounded-3xl border text-left font-bold transition-all transform active:scale-98 relative overflow-hidden flex flex-col justify-between min-h-[180px] cursor-pointer shadow-xl ${
+              className={`p-6 sm:p-8 rounded-3xl border text-left font-bold transition-all duration-200 active-press relative overflow-hidden flex flex-col justify-between min-h-[180px] shadow-xl ${
                 selectedChoice === 'A'
                   ? 'bg-yellow-400 text-neutral-950 border-yellow-300 ring-4 ring-yellow-400/30 scale-[1.02]'
                   : voteResult
                   ? 'bg-neutral-900/90 border-neutral-800 text-neutral-300'
-                  : 'bg-neutral-900 hover:bg-neutral-850 text-white border-neutral-800 hover:border-yellow-400/60'
+                  : 'bg-neutral-900 hover:bg-neutral-850 text-white border-neutral-800 hover:border-yellow-400/60 cursor-pointer hover:scale-[1.01]'
               }`}
             >
               <div>
@@ -235,14 +235,14 @@ export default function PlayPage() {
               </div>
 
               {voteResult?.stats && (
-                <div className="mt-6 pt-4 border-t border-neutral-800/80">
-                  <div className="flex justify-between items-center text-xs font-black mb-1">
+                <div className="mt-6 pt-4 border-t border-neutral-800/80 animate-fade-in">
+                  <div className="flex justify-between items-center text-xs font-black mb-1.5">
                     <span>{voteResult.stats.percent_a}% CHOSE THIS</span>
                     <span className="text-[10px] opacity-80">({voteResult.stats.count_a} votes)</span>
                   </div>
                   <div className="w-full h-2.5 bg-neutral-950 rounded-full overflow-hidden">
                     <div
-                      className="h-full bg-yellow-400 rounded-full transition-all duration-700"
+                      className="h-full bg-yellow-400 rounded-full transition-all duration-700 ease-out animate-progress-fill"
                       style={{ width: `${voteResult.stats.percent_a}%` }}
                     />
                   </div>
@@ -253,12 +253,12 @@ export default function PlayPage() {
             <button
               onClick={() => handleVote('B')}
               disabled={voting || Boolean(voteResult)}
-              className={`p-6 sm:p-8 rounded-3xl border text-left font-bold transition-all transform active:scale-98 relative overflow-hidden flex flex-col justify-between min-h-[180px] cursor-pointer shadow-xl ${
+              className={`p-6 sm:p-8 rounded-3xl border text-left font-bold transition-all duration-200 active-press relative overflow-hidden flex flex-col justify-between min-h-[180px] shadow-xl ${
                 selectedChoice === 'B'
                   ? 'bg-red-500 text-white border-red-400 ring-4 ring-red-500/30 scale-[1.02]'
                   : voteResult
                   ? 'bg-neutral-900/90 border-neutral-800 text-neutral-300'
-                  : 'bg-neutral-900 hover:bg-neutral-850 text-white border-neutral-800 hover:border-red-400/60'
+                  : 'bg-neutral-900 hover:bg-neutral-850 text-white border-neutral-800 hover:border-red-400/60 cursor-pointer hover:scale-[1.01]'
               }`}
             >
               <div>
@@ -273,14 +273,14 @@ export default function PlayPage() {
               </div>
 
               {voteResult?.stats && (
-                <div className="mt-6 pt-4 border-t border-neutral-800/80">
-                  <div className="flex justify-between items-center text-xs font-black mb-1">
+                <div className="mt-6 pt-4 border-t border-neutral-800/80 animate-fade-in">
+                  <div className="flex justify-between items-center text-xs font-black mb-1.5">
                     <span>{voteResult.stats.percent_b}% CHOSE THIS</span>
                     <span className="text-[10px] opacity-80">({voteResult.stats.count_b} votes)</span>
                   </div>
                   <div className="w-full h-2.5 bg-neutral-950 rounded-full overflow-hidden">
                     <div
-                      className="h-full bg-red-500 rounded-full transition-all duration-700"
+                      className="h-full bg-red-500 rounded-full transition-all duration-700 ease-out animate-progress-fill"
                       style={{ width: `${voteResult.stats.percent_b}%` }}
                     />
                   </div>
@@ -290,7 +290,7 @@ export default function PlayPage() {
           </div>
 
           {reactionText && (
-            <div className="w-full p-4 mb-4 bg-neutral-900/90 border border-neutral-800 rounded-2xl text-center shadow-lg animate-fade-in">
+            <div className="w-full p-4 mb-4 bg-neutral-900/90 border border-neutral-800 rounded-2xl text-center shadow-lg animate-pop-in">
               <span className="text-sm font-black text-yellow-400">{reactionText}</span>
             </div>
           )}

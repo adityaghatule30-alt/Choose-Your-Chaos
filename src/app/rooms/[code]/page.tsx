@@ -408,18 +408,18 @@ export default function RoomLobbyPage({ params }: { params: Promise<{ code: stri
         {/* Action Controls */}
         {isHost ? (
           <div className="space-y-3">
-            <button
-              onClick={handleStartGame}
-              disabled={starting || memberCount < 2}
-              className="w-full py-4 px-6 bg-gradient-to-r from-yellow-400 via-orange-500 to-red-500 hover:opacity-95 text-neutral-950 font-black text-sm uppercase tracking-wider rounded-2xl shadow-xl shadow-yellow-500/20 transition-all transform active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer flex items-center justify-center gap-2"
-            >
-              <Play className="w-4 h-4 fill-current" />
-              {starting
-                ? 'SUMMONING ROUND 1...'
-                : memberCount < 2
-                ? 'WAITING FOR 1 MORE PLAYER...'
-                : 'START CHAOS MATCH 🚀'}
-            </button>
+                  <button
+                    onClick={handleStartGame}
+                    disabled={starting || memberCount < 2}
+                    className="w-full py-4 px-6 bg-gradient-to-r from-yellow-400 via-orange-500 to-red-500 hover:opacity-95 text-neutral-950 font-black text-sm uppercase tracking-wider rounded-2xl shadow-xl shadow-yellow-500/20 transition-all duration-200 active-press disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer flex items-center justify-center gap-2"
+                  >
+                    <Play className="w-4 h-4 fill-current" />
+                    {starting
+                      ? 'SUMMONING ROUND 1...'
+                      : memberCount < 2
+                      ? 'WAITING FOR 1 MORE PLAYER...'
+                      : 'START CHAOS MATCH 🔥'}
+                  </button>
             {memberCount < 2 && (
               <p className="text-[11px] text-neutral-500 text-center font-bold">
                 Share your room code <span className="text-yellow-400 font-mono font-black">{roomCode}</span> to invite a friend.

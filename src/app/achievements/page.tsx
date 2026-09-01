@@ -1,4 +1,4 @@
-﻿'use client'
+'use client'
 
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
@@ -64,10 +64,10 @@ const DEFAULT_ACHIEVEMENTS: Achievement[] = [
   },
   {
     id: '6',
-    code: 'couples_telepathy',
-    name: 'Telepathic Duo',
-    description: 'Achieved a 100% memory match in Couples Memory Lane.',
-    badge_emoji: '❤️',
+    code: 'room_champion',
+    name: 'Party Match Winner',
+    description: 'Won a custom multiplayer lobby match in Friend Rooms.',
+    badge_emoji: '👑',
     xp_reward: 150,
     unlocked: false,
   },

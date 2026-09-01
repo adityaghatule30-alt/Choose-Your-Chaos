@@ -1,4 +1,4 @@
-﻿import { MetadataRoute } from 'next'
+import { MetadataRoute } from 'next'
 
 export default function robots(): MetadataRoute.Robots {
   const baseUrl = 'https://chooseyourchaos.com'
@@ -12,10 +12,6 @@ export default function robots(): MetadataRoute.Robots {
         '/play',
         '/spotlight',
         '/judge-me',
-        '/couples',
-        '/couples/memory-lane',
-        '/couples/couple-chaos',
-        '/couples/ship-or-skip',
         '/rooms',
         '/leaderboard',
         '/achievements',
