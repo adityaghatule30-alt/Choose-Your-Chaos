@@ -19,21 +19,25 @@ export class GeminiContentGenerator implements ContentGenerator {
     }
 
     const safeCount = Math.min(count, CONTENT_CONFIG.SAFEGUARDS.MAX_BATCH_SIZE)
-    const prompt = `You are the Lead Game Writer for "Choose Your Chaos" - a viral party game of unhinged either/or dilemmas.
+    const prompt = `You are the Lead Game Writer for "Choose Your Chaos" - a viral party game tailored for Indian college students, young adults, and friend groups.
 Generate exactly ${safeCount} unique, hilarious, high-stakes Either/Or dilemmas.
 
+Core Tone & Setting:
+- Modern Indian student, college, hostel, family, dating, food, UPI, and young adult life.
+- Real-life scenarios players instantly recognize (attendance shortages, proxy, viva, family WhatsApp groups, Sharmaji comparisons, splitting bills, Maggi, chai, auto bargaining, crush drama, surprise inspections).
+- Keep Indian expressions natural ("bhai", "yaar", "jugaad", "arre", "beta", "Sharmaji") without overdoing slang.
+
 Rules:
-1. Category scope: ${categorySlug ? `Focus on category "${categorySlug}"` : 'Mix across Money, College, Friends, Work, Relationships, Personality, Indian, Impossible Choices'}.
+1. Category scope: ${categorySlug ? `Focus on category "${categorySlug}"` : 'Mix across College, Family, Friends, Dating, Money, Food, Travel, Work, Cricket, Impossible Choices'}.
 2. Formatting: Return a strictly valid JSON array of objects.
-3. CONCISE & PUNCHY: Setups MUST be 10-18 words max (1-2 short sentences). Options MUST be 3-6 words max.
-4. ZERO REPETITION: Never repeat the options inside the question prompt text. The prompt sets the scenario, the options provide the distinct choices.
-5. Natural Language: Use engaging conversational English with occasional relatable Indian / Hinglish dilemmas where culturally suitable (e.g. ₹ amounts, UPI, family dynamics, college attendance, corporate appraisal chaos).
-6. No boring questions (e.g. "Tea vs Coffee"). Make them moral/social/existential dilemmas with genuine stakes.
-7. ZERO unsafe content: No self-harm, illegal acts, sexual violence, hate speech, or dangerous physical acts.
-8. JSON Schema per item:
+3. CONCISE & PUNCHY: Setups MUST be 10-22 words max (1-2 short sentences). Options MUST be 3-6 words max.
+4. ZERO REPETITION: Every dilemma must feature a fresh scenario. Never repeat attendance or phone-checking jokes with identical phrasing.
+5. No boring trivialities (e.g. "Tea vs Coffee"). Create real moral, social, or reputational dilemmas with hilarious consequences.
+6. STRICT SAFETY: Zero graphic violence, hate speech, illegal acts, or dangerous stunts.
+7. JSON Schema per item:
 [
   {
-    "question": "Short punchy setup (10-18 words)...",
+    "question": "Short punchy setup (10-22 words)...",
     "option_a": "Choice A (3-6 words with emoji)...",
     "option_b": "Choice B (3-6 words with emoji)...",
     "category_slug": "money | college | friends | work | relationships | personality | dark-humor | indian | impossible-choices | funny",

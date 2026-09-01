@@ -132,6 +132,12 @@ export default function RoomGameplayPage({ params }: { params: Promise<{ code: s
       .on('postgres_changes', { event: '*', schema: 'public', table: 'room_votes' }, () => {
         loadRoomState()
       })
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'room_members' }, () => {
+        loadRoomState()
+      })
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'room_round_scores' }, () => {
+        loadRoomState()
+      })
       .on(
         'postgres_changes',
         { event: '*', schema: 'public', table: 'rooms', filter: `code=eq.${roomCode}` },
