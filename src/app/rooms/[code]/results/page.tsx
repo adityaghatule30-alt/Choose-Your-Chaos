@@ -7,7 +7,7 @@ import { useAuth } from '@/components/AuthProvider'
 import { Room } from '@/types/rooms'
 import { GAME_DEFINITIONS } from '@/lib/games/definitions'
 import { Avatar } from '@/components/Avatar'
-import { Trophy, Medal, Sparkles, Home, RotateCcw, Flame, Crown } from 'lucide-react'
+import { Trophy, Medal, Sparkles, Home, RotateCcw, Flame, Crown, Brain, Target, Bot } from 'lucide-react'
 
 export default function RoomResultsPage({ params }: { params: Promise<{ code: string }> }) {
   const resolvedParams = use(params)
@@ -18,6 +18,15 @@ export default function RoomResultsPage({ params }: { params: Promise<{ code: st
 
   const [room, setRoom] = useState<Room | null>(null)
   const [loading, setLoading] = useState(true)
+  const [aiReaction, setAiReaction] = useState<string | null>(null)
+  const [sameBrainMatches, setSameBrainMatches] = useState<number | null>(null)
+  const [pickForMeStats, setPickForMeStats] = useState<Array<{
+    userId: string
+    displayName: string
+    correct: number
+    total: number
+    score: number
+  }> | null>(null)
 
   useEffect(() => {
     if (!user) {
@@ -31,6 +40,15 @@ export default function RoomResultsPage({ params }: { params: Promise<{ code: st
         const data = await res.json()
         if (data.room) {
           setRoom(data.room)
+        }
+
+        // Fetch contextual Chaos AI reaction & specific stats
+        const reactionRes = await fetch(`/api/rooms/results/reaction?code=${roomCode}`)
+        const reactionData = await reactionRes.json()
+        if (reactionData.success) {
+          if (reactionData.reaction) setAiReaction(reactionData.reaction)
+          if (reactionData.sameBrainMatches !== undefined) setSameBrainMatches(reactionData.sameBrainMatches)
+          if (reactionData.pickForMeStats) setPickForMeStats(reactionData.pickForMeStats)
         }
       } finally {
         setLoading(false)
@@ -50,28 +68,100 @@ export default function RoomResultsPage({ params }: { params: Promise<{ code: st
 
   const members = room?.members || []
   const winner = members[0]
+  const isSameBrain = room?.game_mode === 'same_brain'
+  const isPickForMe = room?.game_mode === 'pick_for_me'
+  const totalRounds = room?.total_rounds || 10
   const gameDef = room ? (GAME_DEFINITIONS[room.game_mode] || GAME_DEFINITIONS.either_or) : GAME_DEFINITIONS.either_or
 
   return (
     <div className="max-w-xl mx-auto px-4 py-8 sm:py-14 text-center animate-pop-in">
-      {/* Trophy Header */}
+      {/* Header Icon */}
       <div className="inline-flex p-4 bg-yellow-500/10 border border-yellow-500/30 rounded-3xl mb-4 shadow-xl">
-        <Trophy className="w-12 h-12 text-yellow-400 animate-bounce" />
+        {isSameBrain ? (
+          <Brain className="w-12 h-12 text-purple-400 animate-bounce" />
+        ) : isPickForMe ? (
+          <Target className="w-12 h-12 text-pink-400 animate-bounce" />
+        ) : (
+          <Trophy className="w-12 h-12 text-yellow-400 animate-bounce" />
+        )}
       </div>
 
       <div className="inline-flex items-center gap-1.5 px-3 py-1 bg-neutral-900 border border-neutral-800 rounded-full text-purple-400 text-xs font-black uppercase tracking-wider mb-2">
-        <Sparkles className="w-3.5 h-3.5 text-yellow-400" /> {gameDef.title} • {room?.total_rounds || 5} ROUNDS MATCH
+        <Sparkles className="w-3.5 h-3.5 text-yellow-400" /> {gameDef.title} • {totalRounds} ROUNDS MATCH
       </div>
 
       <h1 className="text-3xl sm:text-4xl font-black text-white tracking-tight mb-1">
-        {winner ? `${winner.display_name} WINS!` : 'CHAOS CHAMPION'}
+        MATCH COMPLETE
       </h1>
-      <p className="text-xs text-neutral-400 mb-8 font-medium">
-        The match has concluded. Here is how your squad ranked in the arena:
+
+      <p className="text-xs text-neutral-400 mb-6 font-medium">
+        {isSameBrain
+          ? 'Here is how in sync your minds were in the arena:'
+          : isPickForMe
+          ? 'Here is how accurately you predicted each other:'
+          : 'Here is how your squad ranked in the arena:'}
       </p>
 
-      {/* Podium Cards */}
-      <div className="bg-neutral-900/90 backdrop-blur-xl border border-neutral-800 rounded-3xl p-6 sm:p-8 shadow-2xl mb-8">
+      {/* Same Brain Specialized Stat Card */}
+      {isSameBrain && sameBrainMatches !== null && (
+        <div className="bg-purple-950/30 border border-purple-800/80 rounded-3xl p-5 mb-6 shadow-xl text-center">
+          <span className="text-[11px] font-black uppercase tracking-widest text-purple-400 block mb-1">
+            BRAIN SYNCHRONIZATION
+          </span>
+          <div className="text-3xl sm:text-4xl font-black text-white">
+            {sameBrainMatches} / {totalRounds} <span className="text-purple-400 text-lg sm:text-xl font-bold">MATCHES</span>
+          </div>
+          <p className="text-[11px] text-neutral-400 mt-1">
+            {sameBrainMatches >= 7
+              ? '🔥 Telepathic link active!'
+              : sameBrainMatches >= 4
+              ? '⚡ Semi-synchronized chaos.'
+              : '💀 Incompatible frequencies.'}
+          </p>
+        </div>
+      )}
+
+      {/* Pick For Me Specialized Stats Cards */}
+      {isPickForMe && pickForMeStats && (
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-6">
+          {pickForMeStats.map((p) => (
+            <div key={p.userId} className="bg-pink-950/25 border border-pink-800/60 rounded-2xl p-4 text-left shadow-lg">
+              <span className="text-[10px] font-black uppercase tracking-wider text-pink-400 block mb-0.5">
+                {p.displayName} PREDICTIONS
+              </span>
+              <div className="text-xl font-black text-white">
+                {p.correct} / {p.total || Math.ceil(totalRounds / 2)} <span className="text-pink-400 text-xs font-bold">CORRECT</span>
+              </div>
+              <div className="text-xs text-neutral-400 mt-1 font-semibold">
+                Score: <span className="text-yellow-400 font-bold">{p.score} PTS</span>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* Chaos AI Dynamic Match Reaction Box */}
+      {aiReaction && (
+        <div className="bg-neutral-900/95 border border-yellow-500/30 rounded-3xl p-4 sm:p-5 mb-6 shadow-xl text-left flex items-start gap-3.5 animate-pop-in">
+          <div className="p-2.5 bg-yellow-500/10 border border-yellow-500/30 rounded-2xl shrink-0 text-yellow-400">
+            <Bot className="w-5 h-5" />
+          </div>
+          <div>
+            <span className="text-[10px] font-black uppercase tracking-wider text-yellow-400 block mb-0.5">
+              CHAOS AI VERDICT
+            </span>
+            <p className="text-xs sm:text-sm font-bold text-white leading-relaxed">
+              "{aiReaction}"
+            </p>
+          </div>
+        </div>
+      )}
+
+      {/* Scoreboard Cards */}
+      <div className="bg-neutral-900/90 backdrop-blur-xl border border-neutral-800 rounded-3xl p-5 sm:p-7 shadow-2xl mb-8">
+        <div className="text-left text-xs font-black uppercase tracking-wider text-neutral-400 mb-3 px-1">
+          Final Squad Scores
+        </div>
         <div className="space-y-3">
           {members.map((m, index) => {
             const isWinner = index === 0
@@ -86,7 +176,7 @@ export default function RoomResultsPage({ params }: { params: Promise<{ code: st
             return (
               <div
                 key={m.id || m.user_id}
-                className={`p-4 rounded-2xl border flex items-center justify-between transition-all duration-200 ${
+                className={`p-3.5 sm:p-4 rounded-2xl border flex items-center justify-between transition-all duration-200 ${
                   isWinner
                     ? 'bg-yellow-500/15 border-yellow-400/50 shadow-xl shadow-yellow-500/10'
                     : isSecond
@@ -188,16 +278,17 @@ export default function RoomResultsPage({ params }: { params: Promise<{ code: st
           href="/rooms/create"
           className="w-full sm:w-auto px-6 py-3.5 bg-yellow-400 hover:bg-yellow-300 text-neutral-950 font-black text-xs uppercase tracking-wider rounded-2xl shadow-lg shadow-yellow-500/20 transition-all flex items-center justify-center gap-2 active-press cursor-pointer"
         >
-          <RotateCcw className="w-4 h-4" /> PLAY ANOTHER MATCH
+          <RotateCcw className="w-4 h-4" /> PLAY AGAIN
         </Link>
         <Link
-          href="/rooms"
+          href="/games"
           className="w-full sm:w-auto px-6 py-3.5 bg-neutral-900 hover:bg-neutral-850 border border-neutral-800 text-white font-bold text-xs uppercase tracking-wider rounded-2xl transition-all flex items-center justify-center gap-2 active-press cursor-pointer"
         >
-          <Home className="w-4 h-4 text-neutral-400" /> ROOMS HUB
+          <Home className="w-4 h-4 text-neutral-400" /> BACK TO ARCADE
         </Link>
       </div>
     </div>
   )
 }
+
 

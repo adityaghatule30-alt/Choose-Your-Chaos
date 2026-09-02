@@ -100,3 +100,113 @@ Generate 1 short, witty, contextual roast according to your system instruction.`
     return fallbackReaction
   }
 }
+
+export interface MatchResultParams {
+  gameMode: string
+  totalRounds: number
+  sameBrainMatches?: number
+  pickForMeStats?: Array<{
+    userId: string
+    displayName: string
+    correct: number
+    total: number
+    score: number
+  }>
+  playerScores: Array<{
+    displayName: string
+    score: number
+  }>
+}
+
+export async function generateMatchResultReaction({
+  gameMode,
+  totalRounds,
+  sameBrainMatches,
+  pickForMeStats,
+  playerScores,
+}: MatchResultParams): Promise<string> {
+  const apiKey = process.env.GEMINI_API_KEY
+
+  // Default smart fallbacks
+  let fallback = "Match concluded in total chaos! 💀"
+  if (gameMode === 'same_brain') {
+    const m = sameBrainMatches ?? 0
+    if (m >= 8) fallback = "You two share one brain cell and apparently it has excellent attendance. 💀"
+    else if (m >= 5) fallback = "Semi-synchronized thinking. You agree on chaos, disagree on common sense. 🧠"
+    else if (m >= 2) fallback = "Same brain? More like neighboring Wi-Fi networks with weak connection. 😭"
+    else fallback = "Congratulations, you've discovered two completely incompatible operating systems. 💀"
+  } else if (gameMode === 'pick_for_me') {
+    const p1 = pickForMeStats?.[0]
+    const p2 = pickForMeStats?.[1]
+    if (p1 && p2) {
+      if (p1.correct + p2.correct >= (totalRounds * 0.75)) {
+        fallback = "You know each other frighteningly well. Please use this telepathic power responsibly. 💀"
+      } else if (p1.correct + p2.correct <= (totalRounds * 0.25)) {
+        fallback = "You two have officially proven that friendship does not equal psychic ability. 😭"
+      } else {
+        fallback = "Decent predictions, but there are still dark chaotic secrets between you two. 👁️"
+      }
+    }
+  }
+
+  if (!apiKey || apiKey.trim().length === 0) {
+    return fallback
+  }
+
+  try {
+    const ai = new GoogleGenAI({ apiKey })
+    const model = process.env.GEMINI_MODEL || 'gemini-2.5-flash'
+
+    let contextDetails = `Game Mode: ${gameMode}\nTotal Rounds: ${totalRounds}\n`
+    if (gameMode === 'same_brain') {
+      contextDetails += `Matches: ${sameBrainMatches ?? 0} out of ${totalRounds} rounds\n`
+      contextDetails += `Players: ${playerScores.map(p => `${p.displayName} (${p.score} PTS)`).join(', ')}`
+    } else if (gameMode === 'pick_for_me' && pickForMeStats) {
+      contextDetails += `Prediction Accuracy:\n${pickForMeStats.map(p => `- ${p.displayName}: ${p.correct}/${p.total} correct predictions (${p.score} PTS)`).join('\n')}`
+    } else {
+      contextDetails += `Players: ${playerScores.map(p => `${p.displayName} (${p.score} PTS)`).join(', ')}`
+    }
+
+    const prompt = `You are Chaos AI — a witty, sarcastic game master.
+The 2-player match just finished.
+
+Game Result Data:
+${contextDetails}
+
+Generate EXACTLY ONE sentence (5 to 25 words max) roasting or reacting to their actual match statistics.
+Rules:
+- Be playful, witty, slightly rude, and highly contextual to their exact match score / accuracy.
+- Return strictly valid JSON: {"reaction": "your roast here 💀"}`
+
+    const controller = new AbortController()
+    const timeoutId = setTimeout(() => controller.abort(), 2500)
+
+    try {
+      const response = await ai.models.generateContent({
+        model,
+        contents: prompt,
+        config: {
+          responseMimeType: 'application/json',
+          temperature: 0.9,
+          maxOutputTokens: 60,
+        },
+      })
+
+      clearTimeout(timeoutId)
+      const text = response.text?.trim()
+      if (!text) return fallback
+
+      const parsed = JSON.parse(text)
+      if (parsed && typeof parsed.reaction === 'string' && parsed.reaction.trim().length > 0) {
+        return parsed.reaction.trim()
+      }
+      return fallback
+    } catch {
+      clearTimeout(timeoutId)
+      return fallback
+    }
+  } catch {
+    return fallback
+  }
+}
+

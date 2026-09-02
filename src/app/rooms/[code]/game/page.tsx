@@ -337,7 +337,39 @@ export default function RoomGameplayPage({ params }: { params: Promise<{ code: s
       <div className="bg-neutral-900/90 backdrop-blur-xl border border-neutral-800 rounded-3xl p-6 sm:p-10 shadow-2xl relative overflow-hidden mb-6">
         <div className="absolute top-0 right-0 w-64 h-64 bg-purple-500/10 rounded-full blur-3xl -z-10" />
 
-        {/* 1. Mind Reader Mode */}
+        {/* 1. Same Brain Mode */}
+        {gameMode === 'same_brain' && (
+          <div className="text-center mb-6">
+            <span className="text-[10px] font-black uppercase text-purple-400 tracking-widest block mb-1">
+              🧠 SAME BRAIN • PICK THE SAME CHOICE
+            </span>
+            <h1 className="text-xl sm:text-2xl font-black text-white leading-snug">
+              Try to choose the exact same option as your partner!
+            </h1>
+            <p className="text-xs text-neutral-400 mt-1 font-bold">
+              "{currentRound.question?.question || 'Would you rather...'}"
+            </p>
+          </div>
+        )}
+
+        {/* 2. Pick For Me Mode */}
+        {gameMode === 'pick_for_me' && (
+          <div className="text-center mb-6">
+            <span className="text-[10px] font-black uppercase text-pink-400 tracking-widest block mb-1">
+              {isTarget ? '🔮 YOU ARE THE TARGET' : `🎯 YOU ARE PREDICTING: ${currentRound.target_user_name}`}
+            </span>
+            <h1 className="text-xl sm:text-2xl font-black text-white leading-snug">
+              {isTarget
+                ? 'Choose what YOU would honestly pick:'
+                : `Choose what ${currentRound.target_user_name} will pick:`}
+            </h1>
+            <p className="text-xs text-neutral-400 mt-1 font-bold">
+              "{currentRound.question?.question || 'Would you rather...'}"
+            </p>
+          </div>
+        )}
+
+        {/* 3. Mind Reader Mode */}
         {gameMode === 'mind_reader' && (
           <div className="text-center mb-6">
             <span className="text-[10px] font-black uppercase text-purple-400 tracking-widest block mb-1">
@@ -354,7 +386,7 @@ export default function RoomGameplayPage({ params }: { params: Promise<{ code: s
           </div>
         )}
 
-        {/* 2. Worst Answer Wins / Caption Chaos */}
+        {/* 4. Worst Answer Wins / Caption Chaos */}
         {(gameMode === 'worst_answer' || gameMode === 'caption_chaos') && (
           <div className="text-center mb-6">
             <span className="text-[10px] font-black uppercase text-red-400 tracking-widest block mb-1">
@@ -366,7 +398,7 @@ export default function RoomGameplayPage({ params }: { params: Promise<{ code: s
           </div>
         )}
 
-        {/* 3. Imposter Mode */}
+        {/* 5. Imposter Mode */}
         {gameMode === 'imposter' && (
           <div className="text-center mb-6">
             <span className="text-[10px] font-black uppercase text-pink-400 tracking-widest block mb-1">
@@ -378,7 +410,7 @@ export default function RoomGameplayPage({ params }: { params: Promise<{ code: s
           </div>
         )}
 
-        {/* 4. Other Game Modes */}
+        {/* 6. Other Game Modes */}
         {(gameMode === 'guess_player' || gameMode === 'chain_reaction' || gameMode === 'two_truths') && (
           <div className="text-center mb-6">
             <span className="text-[10px] font-black uppercase text-yellow-400 tracking-widest block mb-1">
@@ -390,7 +422,7 @@ export default function RoomGameplayPage({ params }: { params: Promise<{ code: s
           </div>
         )}
 
-        {/* 5. Either / Or Default Setup */}
+        {/* 7. Either / Or Default Setup */}
         {gameMode === 'either_or' && (
           <div className="text-center mb-6">
             <span className="text-[10px] font-black uppercase text-yellow-400 tracking-widest block mb-1">
@@ -402,8 +434,8 @@ export default function RoomGameplayPage({ params }: { params: Promise<{ code: s
           </div>
         )}
 
-        {/* Binary Choices (Either/Or, Mind Reader) */}
-        {(gameMode === 'either_or' || gameMode === 'mind_reader') && currentRound.question && (
+        {/* Binary Choices (Either/Or, Same Brain, Pick For Me, Mind Reader) */}
+        {(gameMode === 'either_or' || gameMode === 'same_brain' || gameMode === 'pick_for_me' || gameMode === 'mind_reader') && currentRound.question && (
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
             <button
               onClick={() => handleSubmitAnswer('A')}
@@ -450,7 +482,7 @@ export default function RoomGameplayPage({ params }: { params: Promise<{ code: s
         )}
 
         {/* Text Input for Custom Answer Games */}
-        {gameMode !== 'either_or' && gameMode !== 'mind_reader' && !selectedChoice && (
+        {gameMode !== 'either_or' && gameMode !== 'same_brain' && gameMode !== 'pick_for_me' && gameMode !== 'mind_reader' && !selectedChoice && (
           <form
             onSubmit={(e) => {
               e.preventDefault()
@@ -461,11 +493,11 @@ export default function RoomGameplayPage({ params }: { params: Promise<{ code: s
             <textarea
               value={textInput}
               onChange={(e) => setTextInput(e.target.value)}
-              placeholder="Type your unhinged answer here..."
-              maxLength={140}
-              rows={3}
+              placeholder="Type your response here..."
               disabled={submitting}
-              className="w-full bg-neutral-950 border border-neutral-800 rounded-2xl p-4 text-white text-sm focus:outline-none focus:border-yellow-400 transition-colors resize-none"
+              maxLength={200}
+              rows={3}
+              className="w-full bg-neutral-950 border border-neutral-800 rounded-2xl p-4 text-white text-sm placeholder-neutral-500 focus:outline-none focus:border-purple-500 focus:ring-1 focus:ring-purple-500 transition-all resize-none disabled:opacity-50"
             />
             <button
               type="submit"
@@ -507,23 +539,74 @@ export default function RoomGameplayPage({ params }: { params: Promise<{ code: s
         {/* Revealed Results Grid */}
         {isRevealed && currentRound.answers && currentRound.answers.length > 0 && (
           <div className="space-y-3 mb-6 animate-pop-in">
+            {/* Same Brain Reveal Banner */}
+            {gameMode === 'same_brain' && (
+              <div className="text-center p-3.5 bg-purple-950/40 border border-purple-800/80 rounded-2xl mb-3">
+                {currentRound.answers.length >= 2 &&
+                currentRound.answers[0].answer === currentRound.answers[1].answer ? (
+                  <div className="text-emerald-400 font-black text-sm sm:text-base flex items-center justify-center gap-2">
+                    <span>🧠 SAME BRAIN MATCH!</span>
+                    <span className="bg-emerald-950 text-emerald-300 px-2 py-0.5 rounded text-xs border border-emerald-800">+20 PTS EACH 🔥</span>
+                  </div>
+                ) : (
+                  <div className="text-red-400 font-black text-sm flex items-center justify-center gap-2">
+                    <span>❌ DIFFERENT BRAINS!</span>
+                    <span className="text-neutral-400 text-xs font-semibold">(0 PTS)</span>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Pick For Me Reveal Banner */}
+            {gameMode === 'pick_for_me' && (
+              <div className="text-center p-3.5 bg-pink-950/40 border border-pink-800/80 rounded-2xl mb-3">
+                {(() => {
+                  const targetAns = currentRound.answers.find((a) => a.user_id === currentRound.target_user_id)?.answer
+                  const predictorAns = currentRound.answers.find((a) => a.user_id !== currentRound.target_user_id)?.answer
+                  const isMatch = targetAns && predictorAns && targetAns === predictorAns
+
+                  return isMatch ? (
+                    <div className="text-emerald-400 font-black text-sm sm:text-base flex items-center justify-center gap-2">
+                      <span>🎯 PREDICTION CORRECT!</span>
+                      <span className="bg-emerald-950 text-emerald-300 px-2 py-0.5 rounded text-xs border border-emerald-800">+20 PTS 🔥</span>
+                    </div>
+                  ) : (
+                    <div className="text-red-400 font-black text-sm flex items-center justify-center gap-2">
+                      <span>❌ PREDICTION MISSED!</span>
+                      <span className="text-neutral-400 text-xs font-semibold">(0 PTS)</span>
+                    </div>
+                  )
+                })()}
+              </div>
+            )}
+
             <span className="text-[11px] font-black uppercase text-neutral-400 tracking-wider block mb-2 text-center">
               🎉 SQUAD ANSWERS & REVEAL
             </span>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              {currentRound.answers.map((ans, idx) => (
-                <div
-                  key={idx}
-                  className="p-4 bg-neutral-950 border border-neutral-800 rounded-2xl flex items-center justify-between"
-                >
-                  <div>
-                    <span className="text-[10px] text-purple-400 font-bold uppercase block">
-                      {ans.display_name}
-                    </span>
-                    <span className="text-sm font-black text-white">{ans.answer}</span>
+              {currentRound.answers.map((ans, idx) => {
+                const optText = ans.answer === 'A'
+                  ? currentRound.question?.option_a
+                  : ans.answer === 'B'
+                  ? currentRound.question?.option_b
+                  : ans.answer
+
+                return (
+                  <div
+                    key={idx}
+                    className="p-4 bg-neutral-950 border border-neutral-800 rounded-2xl flex items-center justify-between"
+                  >
+                    <div>
+                      <span className="text-[10px] text-purple-400 font-bold uppercase block">
+                        {ans.display_name}
+                      </span>
+                      <span className="text-sm font-black text-white">
+                        {ans.answer === 'A' || ans.answer === 'B' ? `Option ${ans.answer}: ${optText}` : ans.answer}
+                      </span>
+                    </div>
                   </div>
-                </div>
-              ))}
+                )
+              })}
             </div>
           </div>
         )}

@@ -67,19 +67,18 @@ export default function GamesHubPage() {
       icon: ShieldAlert,
     },
     {
-      title: '👥 FRIEND ROOMS HUB',
-      subtitle: 'Live Custom Match Lobby',
-      description: 'Host private multiplayer matches across all 8 game modes with instant codes and sync.',
+      title: 'Chaos Room Arena',
+      badge: 'MULTIPLAYER PARTY',
+      description: 'Host private multiplayer matches across all 10 game modes with instant codes and sync.',
       href: '/rooms',
-      border: 'hover:border-purple-500/60',
-      badge: 'MULTIPLAYER HUB',
-      accentText: 'text-purple-400',
-      bgGlow: 'bg-purple-500/10',
       icon: Users,
+      accentText: 'text-purple-400',
+      border: 'hover:border-purple-500/60',
+      bgGlow: 'bg-purple-950/60',
     },
   ]
 
-  // All 8 Multiplayer Party Game Modes
+  // All Multiplayer Party Game Modes
   const allPartyGames = Object.values(GAME_DEFINITIONS)
 
   return (
@@ -87,7 +86,7 @@ export default function GamesHubPage() {
       {/* Header Banner */}
       <div className="text-center max-w-2xl mx-auto">
         <div className="inline-flex items-center gap-2 px-3.5 py-1.5 bg-neutral-900 border border-neutral-800 rounded-full text-xs font-black text-purple-400 uppercase tracking-widest mb-4 shadow-inner">
-          <Gamepad2 className="w-3.5 h-3.5" /> 12 Game Modes Available
+          <Gamepad2 className="w-3.5 h-3.5" /> {allPartyGames.length} Party Squad Game Modes Available
         </div>
         <h1 className="text-3xl sm:text-5xl font-black text-white tracking-tight">
           THE CHAOS <span className="text-transparent bg-clip-text bg-gradient-to-r from-purple-400 via-pink-400 to-yellow-400">ARCADE</span>
@@ -136,11 +135,11 @@ export default function GamesHubPage() {
         </div>
       </div>
 
-      {/* 8 Multiplayer Squad Game Modes */}
+      {/* 10 Multiplayer Squad Game Modes */}
       <div>
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-sm font-black text-neutral-400 uppercase tracking-wider flex items-center gap-2">
-            <Flame className="w-4 h-4 text-orange-400" /> 8 Party Squad Game Modes (2-10 Players)
+            <Flame className="w-4 h-4 text-orange-400" /> {allPartyGames.length} Party Squad Game Modes (2-10 Players)
           </h2>
           <Link
             href="/rooms/create"

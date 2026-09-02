@@ -120,10 +120,4 @@ export const GAME_PROMPTS = {
     { id: 'mr-4', prompt: "You have ₹200 left in your bank account until next week." },
     { id: 'mr-5', prompt: "Your friend gets a haircut that looks completely terrible. What do you say?" },
   ],
-  whos_lying: [
-    { id: 'wl-1', prompt: "Explain why you were 45 minutes late to the morning exam." },
-    { id: 'wl-2', prompt: "What actually happened to the leftover biryani in the fridge?" },
-    { id: 'wl-3', prompt: "Why was your phone unreachable from 11 PM to 3 AM last night?" },
-    { id: 'wl-4', prompt: "How did you manage 80% attendance without attending a single Friday lecture?" },
-  ],
 }

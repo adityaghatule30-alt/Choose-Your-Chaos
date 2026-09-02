@@ -1,8 +1,9 @@
 export type GameMode =
   | 'either_or'
+  | 'same_brain'
+  | 'pick_for_me'
   | 'mind_reader'
   | 'worst_answer'
-  | 'whos_lying'
   | 'imposter'
   | 'guess_player'
   | 'chain_reaction'
@@ -24,6 +25,32 @@ export interface GameDefinition {
 }
 
 export const GAME_DEFINITIONS: Record<GameMode, GameDefinition> = {
+  same_brain: {
+    id: 'same_brain',
+    title: '🧠 SAME BRAIN',
+    subtitle: 'Choose The Same Answer',
+    description: 'Two players answer independently. The goal is to choose the exact same option for +20 PTS each.',
+    shortDescription: 'Match your partner’s choice.',
+    iconName: 'Sparkles',
+    badge: '2-PLAYER SYNERGY',
+    accentColor: 'purple',
+    minPlayers: 2,
+    maxPlayers: 2,
+    supportsAI: true,
+  },
+  pick_for_me: {
+    id: 'pick_for_me',
+    title: '😭 PICK FOR ME',
+    subtitle: 'Predict Your Friend’s Choice',
+    description: 'Take turns predicting what the other player will choose. +20 PTS for every correct prediction.',
+    shortDescription: 'Predict your friend’s choice.',
+    iconName: 'UserCheck',
+    badge: '2-PLAYER PREDICTION',
+    accentColor: 'pink',
+    minPlayers: 2,
+    maxPlayers: 2,
+    supportsAI: true,
+  },
   either_or: {
     id: 'either_or',
     title: '🎮 EITHER / OR',
@@ -39,7 +66,7 @@ export const GAME_DEFINITIONS: Record<GameMode, GameDefinition> = {
   },
   mind_reader: {
     id: 'mind_reader',
-    title: '🧠 MIND READER',
+    title: '🔮 MIND READER',
     subtitle: 'Predict Their Choice',
     description: 'Predict what the spotlight player will choose. Prove you actually know your squad.',
     shortDescription: "Predict the target's choice.",
@@ -59,19 +86,6 @@ export const GAME_DEFINITIONS: Record<GameMode, GameDefinition> = {
     iconName: 'Skull',
     badge: 'DARK COMEDY',
     accentColor: 'red',
-    minPlayers: 2,
-    maxPlayers: 10,
-    supportsAI: true,
-  },
-  whos_lying: {
-    id: 'whos_lying',
-    title: "🕵️ WHO'S LYING?",
-    subtitle: 'Deception & Spotting Cap',
-    description: 'Everyone answers the dilemma. One answer is secretly completely fabricated. Spot the lie.',
-    shortDescription: 'Spot the fabricated answer.',
-    iconName: 'ShieldAlert',
-    badge: 'BLUFFING & SOCIAL DEDUCTION',
-    accentColor: 'orange',
     minPlayers: 2,
     maxPlayers: 10,
     supportsAI: true,

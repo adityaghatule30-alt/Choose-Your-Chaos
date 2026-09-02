@@ -1,8 +1,9 @@
 export type GameMode =
   | 'either_or'
+  | 'same_brain'
+  | 'pick_for_me'
   | 'mind_reader'
   | 'worst_answer'
-  | 'whos_lying'
   | 'imposter'
   | 'guess_player'
   | 'chain_reaction'
