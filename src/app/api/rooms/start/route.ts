@@ -1,5 +1,6 @@
-﻿import { NextResponse } from 'next/server'
+import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
+import { getRandomMeme } from '@/lib/services/memes'
 
 export async function POST(request: Request) {
   try {
@@ -25,6 +26,18 @@ export async function POST(request: Request) {
 
     if (error) {
       return NextResponse.json({ success: false, error: error.message }, { status: 500 })
+    }
+
+    if (data?.success && data?.round_id && (data.game_mode === 'who_sent_this' || data.game_mode === 'caption_battle')) {
+      try {
+        const meme = await getRandomMeme([])
+        await supabase
+          .from('room_rounds')
+          .update({ prompt_data: { meme } })
+          .eq('id', data.round_id)
+      } catch (err) {
+        console.warn('[Rooms Start API] Failed to attach meme to round 1:', err)
+      }
     }
 
     return NextResponse.json(data)

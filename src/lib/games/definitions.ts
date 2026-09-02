@@ -3,6 +3,8 @@ export type GameMode =
   | 'either_or'
   | 'mind_reader'
   | 'two_truths'
+  | 'who_sent_this'
+  | 'caption_battle'
 
 export interface GameDefinition {
   id: GameMode
@@ -19,6 +21,32 @@ export interface GameDefinition {
 }
 
 export const GAME_DEFINITIONS: Record<GameMode, GameDefinition> = {
+  who_sent_this: {
+    id: 'who_sent_this',
+    title: '🕵️ WHO SENT THIS?',
+    subtitle: 'Meme Accusations',
+    description: 'A random meme appears. Secretly accuse the friend in the room who would definitely post or send this.',
+    shortDescription: 'Who in this room would send this?',
+    iconName: 'Image',
+    badge: 'MEME ACCUSATIONS',
+    accentColor: 'blue',
+    minPlayers: 2,
+    maxPlayers: 10,
+    supportsAI: true,
+  },
+  caption_battle: {
+    id: 'caption_battle',
+    title: '📸 CAPTION BATTLE',
+    subtitle: 'Anonymous Meme Wars',
+    description: 'Write your most unhinged caption for the meme. Vote anonymously for the funniest caption.',
+    shortDescription: 'Write & vote on funniest captions.',
+    iconName: 'Flame',
+    badge: 'MEME CAPTION WAR',
+    accentColor: 'orange',
+    minPlayers: 2,
+    maxPlayers: 10,
+    supportsAI: true,
+  },
   pick_for_me: {
     id: 'pick_for_me',
     title: '😭 PICK FOR ME',

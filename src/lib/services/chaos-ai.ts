@@ -127,7 +127,11 @@ export async function generateMatchResultReaction({
 
   // Default smart fallbacks
   let fallback = "Match concluded in total chaos! 💀"
-  if (gameMode === 'pick_for_me') {
+  if (gameMode === 'who_sent_this') {
+    fallback = "The squad has spoken: your meme taste is officially on trial. 💀"
+  } else if (gameMode === 'caption_battle') {
+    fallback = "Elite comedy warfare. Some of those captions belong in a museum (or jail). 🏆"
+  } else if (gameMode === 'pick_for_me') {
     const p1 = pickForMeStats?.[0]
     const p2 = pickForMeStats?.[1]
     if (p1 && p2) {

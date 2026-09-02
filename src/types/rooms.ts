@@ -3,6 +3,8 @@ export type GameMode =
   | 'either_or'
   | 'mind_reader'
   | 'two_truths'
+  | 'who_sent_this'
+  | 'caption_battle'
 
 export interface RoomMember {
   id: string
@@ -50,11 +52,24 @@ export interface RoomRound {
   }>
   chaos_ai_comment?: string | null
   stats?: {
-    count_a: number
-    count_b: number
-    total: number
-    percent_a: number
-    percent_b: number
+    count_a?: number
+    count_b?: number
+    total?: number
+    percent_a?: number
+    percent_b?: number
+    topAccusedId?: string | null
+    topAccusedName?: string
+    maxVotes?: number
+    breakdown?: Array<{
+      userId: string
+      displayName: string
+      count: number
+    }>
+    winningAuthorId?: string | null
+    winningAuthorName?: string
+    winningCaption?: string
+    winningVotes?: number
+    [key: string]: any
   }
 }
 

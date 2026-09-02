@@ -3,7 +3,6 @@
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { useAuth } from '@/components/AuthProvider'
-import { Avatar } from '@/components/Avatar'
 import { getLevelFromXP } from '@/lib/progression'
 import {
   Flame,

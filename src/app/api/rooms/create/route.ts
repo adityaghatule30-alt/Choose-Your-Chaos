@@ -24,8 +24,8 @@ export async function POST(request: Request) {
     const body = await request.json()
     const name = body.name?.trim() || 'Chaos Arena'
     const totalRounds = [3, 5, 10].includes(body.total_rounds) ? body.total_rounds : 5
-    const validModes = ['pick_for_me', 'either_or', 'mind_reader', 'two_truths']
-    const gameMode = validModes.includes(body.game_mode) ? body.game_mode : 'either_or'
+    const validModes = ['who_sent_this', 'caption_battle', 'pick_for_me', 'either_or', 'mind_reader', 'two_truths']
+    const gameMode = validModes.includes(body.game_mode) ? body.game_mode : 'who_sent_this'
     const code = generateRoomCode()
 
     const { data: room, error } = await supabase

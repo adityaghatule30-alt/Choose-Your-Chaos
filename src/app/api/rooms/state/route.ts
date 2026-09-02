@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { Room, RoomRound } from '@/types/rooms'
 import { GAME_PROMPTS } from '@/lib/games/prompts'
+import { getRandomMeme } from '@/lib/services/memes'
 
 export async function GET(request: Request) {
   try {
@@ -82,7 +83,7 @@ export async function GET(request: Request) {
         // Fetch answers count & user's own answer
         const { data: answers } = await supabase
           .from('room_answers')
-          .select('user_id, answer, metadata')
+          .select('id, user_id, answer, metadata')
           .eq('round_id', round.id)
 
         const totalAnswers = answers?.length || 0
@@ -106,6 +107,20 @@ export async function GET(request: Request) {
         const gameMode = room.game_mode || 'either_or'
         let promptPayload: any = round.prompt_data || {}
 
+        // If meme game and no meme attached, lazily attach one
+        if ((gameMode === 'who_sent_this' || gameMode === 'caption_battle') && !promptPayload.meme) {
+          try {
+            const meme = await getRandomMeme([])
+            promptPayload = { ...promptPayload, meme }
+            await supabase
+              .from('room_rounds')
+              .update({ prompt_data: promptPayload })
+              .eq('id', round.id)
+          } catch (err) {
+            console.warn('[Rooms State] Meme generation error:', err)
+          }
+        }
+
         if (!promptPayload || Object.keys(promptPayload).length === 0) {
           const promptsList = (GAME_PROMPTS as any)[gameMode]
           if (promptsList && promptsList.length > 0) {
@@ -119,20 +134,30 @@ export async function GET(request: Request) {
 
         let publicAnswers: any[] = []
         let publicVotes: any[] = []
-        let stats = undefined
+        let stats: any = undefined
+
+        // Always fetch votes if available
+        const { data: votes } = await supabase
+          .from('room_votes')
+          .select('voter_id, target_id')
+          .eq('round_id', round.id)
+
+        publicVotes = (votes || []).map((v) => ({
+          voter_id: v.voter_id,
+          target_id: v.target_id,
+        }))
+
+        // Caption Battle: Anonymous captions for voting phase before reveal
+        if (gameMode === 'caption_battle' && totalAnswers > 0) {
+          promptPayload.anonymousCaptions = (answers || []).map((a, idx) => ({
+            id: a.user_id, // used as target_id for voting
+            caption: a.answer,
+            label: `Caption ${String.fromCharCode(65 + idx)}`,
+            isOwn: a.user_id === user.id,
+          }))
+        }
 
         if (isRevealed) {
-          // Fetch round votes
-          const { data: votes } = await supabase
-            .from('room_votes')
-            .select('voter_id, target_id')
-            .eq('round_id', round.id)
-
-          publicVotes = (votes || []).map((v) => ({
-            voter_id: v.voter_id,
-            target_id: v.target_id,
-          }))
-
           if (gameMode === 'either_or' || gameMode === 'mind_reader') {
             const countA = answers?.filter((a) => a.answer === 'A').length || 0
             const countB = answers?.filter((a) => a.answer === 'B').length || 0
@@ -142,6 +167,65 @@ export async function GET(request: Request) {
               total: totalAnswers,
               percent_a: totalAnswers > 0 ? Math.round((countA / totalAnswers) * 100) : 50,
               percent_b: totalAnswers > 0 ? 100 - Math.round((countA / totalAnswers) * 100) : 50,
+            }
+          } else if (gameMode === 'who_sent_this') {
+            // Calculate accusation vote breakdown
+            const accusedCounts: Record<string, number> = {}
+            for (const a of answers || []) {
+              if (a.answer) {
+                accusedCounts[a.answer] = (accusedCounts[a.answer] || 0) + 1
+              }
+            }
+
+            let topAccusedId: string | null = null
+            let maxVotes = 0
+            for (const [accusedId, count] of Object.entries(accusedCounts)) {
+              if (count > maxVotes) {
+                maxVotes = count
+                topAccusedId = accusedId
+              }
+            }
+
+            const topMember = mappedMembers.find((m) => m.user_id === topAccusedId)
+            stats = {
+              topAccusedId,
+              topAccusedName: topMember?.display_name || 'Nobody',
+              maxVotes,
+              breakdown: Object.entries(accusedCounts).map(([accusedId, count]) => {
+                const member = mappedMembers.find((m) => m.user_id === accusedId)
+                return {
+                  userId: accusedId,
+                  displayName: member?.display_name || 'Player',
+                  count,
+                }
+              }),
+            }
+          } else if (gameMode === 'caption_battle') {
+            // Calculate caption vote breakdown
+            const captionVotes: Record<string, number> = {}
+            for (const v of publicVotes) {
+              if (v.target_id) {
+                captionVotes[v.target_id] = (captionVotes[v.target_id] || 0) + 1
+              }
+            }
+
+            let winningAuthorId: string | null = null
+            let maxVotes = 0
+            for (const [authorId, count] of Object.entries(captionVotes)) {
+              if (count > maxVotes) {
+                maxVotes = count
+                winningAuthorId = authorId
+              }
+            }
+
+            const winningAns = answers?.find((a) => a.user_id === winningAuthorId)
+            const winningMember = mappedMembers.find((m) => m.user_id === winningAuthorId)
+
+            stats = {
+              winningAuthorId,
+              winningAuthorName: winningMember?.display_name || 'Anonymous',
+              winningCaption: winningAns?.answer || 'No caption',
+              winningVotes: maxVotes,
             }
           }
 

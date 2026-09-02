@@ -72,7 +72,7 @@ export default function GuidePage() {
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-2">
               <div className="p-4 bg-neutral-950 rounded-2xl border border-neutral-800 text-xs text-neutral-300">
                 <span className="font-black text-yellow-400 block mb-1">1. CREATE IDENTITY</span>
-                Pick your custom avatar from 14 official avatars and set your username.
+                Customize your display name, bio, and social links to build your chaos profile.
               </div>
               <div className="p-4 bg-neutral-950 rounded-2xl border border-neutral-800 text-xs text-neutral-300">
                 <span className="font-black text-pink-400 block mb-1">2. JOIN OR HOST</span>

@@ -5,7 +5,6 @@ import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { useAuth } from '@/components/AuthProvider'
 import { FriendProfile } from '@/types/social'
-import { Avatar } from '@/components/Avatar'
 import { SocialLinks } from '@/components/social/SocialLinks'
 import { FriendActionButton } from '@/components/social/FriendActionButton'
 import { getLevelFromXP } from '@/lib/progression'
@@ -76,7 +75,7 @@ export default function UserPublicProfilePage({ params }: { params: Promise<{ us
   const levelInfo = getLevelFromXP(profile.xp || 0)
 
   return (
-    <div className="max-w-3xl mx-auto px-4 py-8 sm:py-12 space-y-6">
+    <div className="max-w-3xl mx-auto px-4 py-8 sm:py-12 space-y-6 animate-pop-in">
       <Link
         href="/friends"
         className="inline-flex items-center gap-1.5 text-xs font-bold text-neutral-400 hover:text-white transition-colors"
@@ -85,70 +84,66 @@ export default function UserPublicProfilePage({ params }: { params: Promise<{ us
       </Link>
 
       {/* Main Profile Card */}
-      <div className="bg-neutral-900 border border-neutral-800 rounded-3xl p-6 sm:p-10 shadow-2xl relative overflow-hidden">
+      <div className="bg-neutral-900/90 backdrop-blur-xl border border-neutral-800 rounded-3xl p-6 sm:p-10 shadow-2xl relative overflow-hidden">
         <div className="absolute top-0 right-0 w-64 h-64 bg-purple-500/10 rounded-full blur-3xl -z-10" />
 
-        <div className="flex flex-col sm:flex-row items-center sm:items-start gap-6">
-          <div className="relative">
-            <Avatar src={profile.avatar_url} fallback={profile.username || 'U'} size="2xl" glow />
-            <div className="absolute -bottom-2 -right-2 px-2.5 py-0.5 bg-yellow-400 text-neutral-950 text-[11px] font-black rounded-full shadow-lg">
-              LVL {levelInfo.level}
-            </div>
-          </div>
-
-          <div className="flex-1 text-center sm:text-left">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-              <div>
+        <div className="flex flex-col gap-5">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div>
+              <div className="flex items-center gap-2.5 flex-wrap">
                 <h1 className="text-2xl sm:text-3xl font-black text-white tracking-tight">
                   {profile.display_name}
                 </h1>
-                <div className="text-xs font-bold text-neutral-400 mt-0.5">
-                  @{profile.username}
-                </div>
+                <span className="px-2.5 py-0.5 bg-yellow-400 text-neutral-950 text-xs font-black rounded-full shadow">
+                  LVL {levelInfo.level}
+                </span>
               </div>
-
-              {!isSelf && user && (
-                <div className="flex items-center gap-2 self-center sm:self-auto">
-                  <FriendActionButton
-                    targetUserId={profile.id}
-                    friendshipId={profile.friendship_id}
-                    initialStatus={profile.friendship_status || 'none'}
-                  />
-                  {profile.friendship_status === 'accepted' && (
-                    <Link
-                      href="/friends"
-                      className="px-4 py-2.5 bg-purple-600 hover:bg-purple-500 text-white font-black text-xs uppercase tracking-wider rounded-xl transition-all flex items-center gap-1.5 shadow"
-                    >
-                      <MessageSquare className="w-3.5 h-3.5" /> CHAT
-                    </Link>
-                  )}
-                </div>
-              )}
+              <div className="text-xs font-bold text-neutral-400 mt-1">
+                @{profile.username}
+              </div>
             </div>
 
-            {profile.bio && (
-              <p className="text-xs text-neutral-300 mt-3 max-w-lg leading-relaxed italic">
-                "{profile.bio}"
-              </p>
-            )}
-
-            {/* Level Bar */}
-            <div className="mt-6">
-              <div className="flex justify-between items-center text-xs font-black mb-1.5">
-                <span className="text-yellow-400 flex items-center gap-1">
-                  <Flame className="w-3.5 h-3.5 fill-current" /> LEVEL {levelInfo.level}
-                </span>
-                <span className="text-neutral-400">
-                  {levelInfo.currentXP.toLocaleString()} XP
-                </span>
-              </div>
-
-              <div className="w-full h-2.5 bg-neutral-950 rounded-full border border-neutral-800/80 p-0.5 overflow-hidden">
-                <div
-                  className="h-full bg-gradient-to-r from-purple-500 to-yellow-400 rounded-full"
-                  style={{ width: `${levelInfo.percentProgress}%` }}
+            {!isSelf && user && (
+              <div className="flex items-center gap-2 self-start sm:self-auto">
+                <FriendActionButton
+                  targetUserId={profile.id}
+                  friendshipId={profile.friendship_id}
+                  initialStatus={profile.friendship_status || 'none'}
                 />
+                {profile.friendship_status === 'accepted' && (
+                  <Link
+                    href="/friends"
+                    className="px-4 py-2.5 bg-purple-600 hover:bg-purple-500 text-white font-black text-xs uppercase tracking-wider rounded-xl transition-all flex items-center gap-1.5 shadow"
+                  >
+                    <MessageSquare className="w-3.5 h-3.5" /> CHAT
+                  </Link>
+                )}
               </div>
+            )}
+          </div>
+
+          {profile.bio && (
+            <p className="text-sm text-neutral-300 max-w-lg leading-relaxed italic">
+              "{profile.bio}"
+            </p>
+          )}
+
+          {/* Level Bar */}
+          <div className="pt-2">
+            <div className="flex justify-between items-center text-xs font-black mb-1.5">
+              <span className="text-yellow-400 flex items-center gap-1">
+                <Flame className="w-3.5 h-3.5 fill-current" /> LEVEL {levelInfo.level}
+              </span>
+              <span className="text-neutral-400">
+                {levelInfo.currentXP.toLocaleString()} XP
+              </span>
+            </div>
+
+            <div className="w-full h-2.5 bg-neutral-950 rounded-full border border-neutral-800/80 p-0.5 overflow-hidden">
+              <div
+                className="h-full bg-gradient-to-r from-purple-500 to-yellow-400 rounded-full"
+                style={{ width: `${levelInfo.percentProgress}%` }}
+              />
             </div>
           </div>
         </div>

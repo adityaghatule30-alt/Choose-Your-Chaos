@@ -6,7 +6,6 @@ import Link from 'next/link'
 import { useAuth } from '@/components/AuthProvider'
 import { getLevelFromXP } from '@/lib/progression'
 import { UserStats } from '@/types/progression'
-import { Avatar } from '@/components/Avatar'
 import { SocialLinks } from '@/components/social/SocialLinks'
 import {
   Flame,
@@ -68,74 +67,64 @@ export default function ProfilePage() {
   return (
     <div className="max-w-4xl mx-auto px-4 py-8 sm:py-12">
       {/* Profile Banner Card */}
-      <div className="bg-neutral-900 border border-neutral-800 rounded-3xl p-6 sm:p-10 shadow-2xl relative overflow-hidden mb-8">
+      <div className="bg-neutral-900/90 backdrop-blur-xl border border-neutral-800 rounded-3xl p-6 sm:p-10 shadow-2xl relative overflow-hidden mb-8">
         <div className="absolute top-0 right-0 w-64 h-64 bg-gradient-to-bl from-purple-500/10 via-pink-500/10 to-transparent rounded-full blur-3xl -z-10" />
 
-        <div className="flex flex-col sm:flex-row items-center sm:items-start gap-6">
-          {/* Avatar with Level Badge */}
-          <div className="relative">
-            <Avatar
-              src={profile.avatar_url}
-              fallback={profile.username || 'U'}
-              size="2xl"
-              glow
-            />
-            <div className="absolute -bottom-2 -right-2 px-2.5 py-0.5 bg-yellow-400 text-neutral-950 text-[11px] font-black rounded-full shadow-lg">
-              LVL {levelInfo.level}
-            </div>
-          </div>
-
-          {/* User Info */}
-          <div className="flex-1 text-center sm:text-left">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-              <div>
-                <h1 className="text-2xl sm:text-3xl font-black text-white tracking-tight">
+        <div className="flex flex-col gap-5">
+          {/* Top Row: User Identity & Edit Button */}
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div>
+              <div className="flex items-center gap-2.5 flex-wrap">
+                <h1 className="text-2xl sm:text-4xl font-black text-white tracking-tight">
                   {profile.display_name || profile.username}
                 </h1>
-                <div className="text-xs font-bold text-neutral-400 mt-0.5">
-                  @{profile.username}
-                </div>
+                <span className="px-2.5 py-0.5 bg-yellow-400 text-neutral-950 text-xs font-black rounded-full shadow">
+                  LVL {levelInfo.level}
+                </span>
               </div>
-
-              <Link
-                href="/settings"
-                className="inline-flex items-center justify-center gap-1.5 px-4 py-2.5 bg-neutral-950 hover:bg-neutral-850 border border-neutral-800 text-neutral-300 hover:text-white rounded-2xl text-xs font-black transition-all self-center sm:self-auto shadow-md"
-              >
-                <Settings className="w-3.5 h-3.5" /> Customize Identity
-              </Link>
+              <div className="text-xs font-bold text-neutral-400 mt-1">
+                @{profile.username}
+              </div>
             </div>
 
-            {profile.bio && (
-              <p className="text-xs text-neutral-300 mt-3 max-w-lg leading-relaxed italic">
-                "{profile.bio}"
-              </p>
-            )}
+            <Link
+              href="/settings"
+              className="inline-flex items-center justify-center gap-1.5 px-4 py-2.5 bg-neutral-950 hover:bg-neutral-850 border border-neutral-800 text-neutral-300 hover:text-white rounded-2xl text-xs font-black transition-all self-start sm:self-center shadow-md active-press"
+            >
+              <Settings className="w-3.5 h-3.5 text-yellow-400" /> Customize Identity
+            </Link>
+          </div>
 
-            {/* Level & XP Progress Bar */}
-            <div className="mt-6">
-              <div className="flex justify-between items-center text-xs font-black mb-1.5">
-                <span className="text-yellow-400 flex items-center gap-1">
-                  <Flame className="w-3.5 h-3.5 fill-current" /> LEVEL {levelInfo.level}
+          {profile.bio && (
+            <p className="text-sm text-neutral-300 max-w-2xl leading-relaxed italic">
+              "{profile.bio}"
+            </p>
+          )}
+
+          {/* Level & XP Progress Bar */}
+          <div className="pt-2">
+            <div className="flex justify-between items-center text-xs font-black mb-1.5">
+              <span className="text-yellow-400 flex items-center gap-1">
+                <Flame className="w-3.5 h-3.5 fill-current" /> LEVEL {levelInfo.level} • {profile.chaos_score || 0} CHAOS PTS
+              </span>
+              <span className="text-neutral-400">
+                {levelInfo.currentXP.toLocaleString()} XP{' '}
+                <span className="text-neutral-600 font-normal">
+                  / {levelInfo.xpForNextLevel.toLocaleString()} XP
                 </span>
-                <span className="text-neutral-400">
-                  {levelInfo.currentXP.toLocaleString()} XP{' '}
-                  <span className="text-neutral-600 font-normal">
-                    / {levelInfo.xpForNextLevel.toLocaleString()} XP
-                  </span>
-                </span>
-              </div>
+              </span>
+            </div>
 
-              <div className="w-full h-3 bg-neutral-950 rounded-full border border-neutral-800/80 p-0.5 overflow-hidden shadow-inner">
-                <div
-                  className="h-full bg-gradient-to-r from-purple-500 via-pink-500 to-yellow-400 rounded-full transition-all duration-700 shadow-sm"
-                  style={{ width: `${levelInfo.percentProgress}%` }}
-                />
-              </div>
+            <div className="w-full h-3 bg-neutral-950 rounded-full border border-neutral-800/80 p-0.5 overflow-hidden shadow-inner">
+              <div
+                className="h-full bg-gradient-to-r from-purple-500 via-pink-500 to-yellow-400 rounded-full transition-all duration-700 shadow-sm"
+                style={{ width: `${levelInfo.percentProgress}%` }}
+              />
+            </div>
 
-              <div className="flex justify-between items-center text-[10px] text-neutral-500 mt-1.5 font-bold">
-                <span>{levelInfo.percentProgress}% to Level {levelInfo.level + 1}</span>
-                <span>{levelInfo.neededXPForNextLevel.toLocaleString()} XP remaining</span>
-              </div>
+            <div className="flex justify-between items-center text-[10px] text-neutral-500 mt-1.5 font-bold">
+              <span>{levelInfo.percentProgress}% to Level {levelInfo.level + 1}</span>
+              <span>{levelInfo.neededXPForNextLevel.toLocaleString()} XP remaining</span>
             </div>
           </div>
         </div>

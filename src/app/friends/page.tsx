@@ -5,7 +5,6 @@ import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { useAuth } from '@/components/AuthProvider'
 import { FriendProfile } from '@/types/social'
-import { Avatar } from '@/components/Avatar'
 import { ChatBox } from '@/components/social/ChatBox'
 import { createClient } from '@/lib/supabase/client'
 import {
@@ -120,33 +119,30 @@ export default function FriendsPage() {
         <div className={activeChatFriend ? 'lg:col-span-6' : 'lg:col-span-12'}>
           {/* Pending Requests */}
           {incoming.length > 0 && (
-            <div className="bg-neutral-900 border border-purple-500/40 rounded-3xl p-5 mb-6 shadow-xl animate-pop-in">
-              <span className="text-xs font-black uppercase text-purple-400 tracking-wider block mb-3 flex items-center gap-2">
+            <div className="bg-neutral-900 border border-neutral-800 rounded-3xl p-6 shadow-2xl space-y-4">
+              <span className="text-xs font-black uppercase text-yellow-400 tracking-wider flex items-center gap-1.5">
                 <Sparkles className="w-3.5 h-3.5 text-yellow-400" /> Pending Requests ({incoming.length})
               </span>
               <div className="space-y-3">
                 {incoming.map((req) => (
                   <div
                     key={req.id}
-                    className="p-3 bg-neutral-950 border border-neutral-800 rounded-2xl flex items-center justify-between gap-3"
+                    className="p-3.5 bg-neutral-950 border border-neutral-800 rounded-2xl flex items-center justify-between gap-3"
                   >
-                    <div className="flex items-center gap-3">
-                      <Avatar src={req.avatar_url} fallback={req.username || 'U'} size="sm" />
-                      <div>
-                        <div className="text-xs font-black text-white">{req.display_name}</div>
-                        <div className="text-[10px] text-neutral-400">@{req.username}</div>
-                      </div>
+                    <div>
+                      <div className="text-xs font-black text-white">{req.display_name}</div>
+                      <div className="text-[10px] text-neutral-400">@{req.username}</div>
                     </div>
                     <div className="flex items-center gap-2">
                       <button
                         onClick={() => handleAccept(req.friendship_id)}
-                        className="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white font-black text-xs rounded-xl flex items-center gap-1 transition-all shadow"
+                        className="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white font-black text-xs rounded-xl flex items-center gap-1 transition-all shadow active-press"
                       >
                         <Check className="w-3.5 h-3.5" /> Accept
                       </button>
                       <button
                         onClick={() => handleDecline(req.friendship_id)}
-                        className="p-1.5 bg-neutral-900 hover:bg-neutral-800 text-neutral-400 hover:text-white rounded-xl transition-all"
+                        className="p-1.5 bg-neutral-900 hover:bg-neutral-800 text-neutral-400 hover:text-white rounded-xl transition-all active-press"
                       >
                         <X className="w-4 h-4" />
                       </button>
@@ -174,7 +170,7 @@ export default function FriendsPage() {
                 </p>
                 <Link
                   href="/leaderboard"
-                  className="inline-flex items-center gap-1.5 px-4 py-2 bg-neutral-950 border border-neutral-800 text-yellow-400 font-black text-xs rounded-xl hover:border-yellow-400/60 transition-all shadow"
+                  className="inline-flex items-center gap-1.5 px-4 py-2 bg-neutral-950 border border-neutral-800 text-yellow-400 font-black text-xs rounded-xl hover:border-yellow-400/60 transition-all shadow active-press"
                 >
                   <Sparkles className="w-3.5 h-3.5" /> EXPLORE LEADERBOARD
                 </Link>
@@ -190,7 +186,6 @@ export default function FriendsPage() {
                       href={`/user/${f.username}`}
                       className="flex items-center gap-3 min-w-0"
                     >
-                      <Avatar src={f.avatar_url} fallback={f.username || 'F'} size="md" />
                       <div className="min-w-0">
                         <div className="text-xs font-black text-white group-hover:text-yellow-400 transition-colors truncate">
                           {f.display_name}
@@ -201,7 +196,7 @@ export default function FriendsPage() {
 
                     <button
                       onClick={() => setActiveChatFriend(f)}
-                      className="px-3 py-1.5 bg-purple-600/20 hover:bg-purple-600 text-purple-400 hover:text-white border border-purple-500/40 rounded-xl text-xs font-black transition-all flex items-center gap-1.5 shrink-0 cursor-pointer shadow"
+                      className="px-3 py-1.5 bg-purple-600/20 hover:bg-purple-600 text-purple-400 hover:text-white border border-purple-500/40 rounded-xl text-xs font-black transition-all flex items-center gap-1.5 shrink-0 cursor-pointer shadow active-press"
                     >
                       <MessageSquare className="w-3.5 h-3.5" /> CHAT
                     </button>

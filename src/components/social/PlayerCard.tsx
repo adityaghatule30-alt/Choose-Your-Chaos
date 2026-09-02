@@ -20,7 +20,6 @@
 
 import Link from 'next/link'
 import { Crown } from 'lucide-react'
-import { Avatar } from '@/components/Avatar'
 import { RoomMember } from '@/types/rooms'
 
 interface PlayerCardProps {
@@ -32,7 +31,7 @@ interface PlayerCardProps {
 
 export function PlayerCard({ member, isCurrentUser, variant = 'lobby' }: PlayerCardProps) {
   const profileHref = member.username ? `/user/${member.username}` : undefined
-  const roleLabel = member.is_host ? 'Lobby Creator' : 'Chaos Agent'
+  const roleLabel = member.is_host ? 'Lobby Host' : 'Chaos Agent'
 
   if (variant === 'game') {
     // Compact row for game scoreboard / player list
@@ -48,10 +47,9 @@ export function PlayerCard({ member, isCurrentUser, variant = 'lobby' }: PlayerC
         {profileHref ? (
           <Link
             href={profileHref}
-            className="flex items-center gap-2.5 min-w-0 flex-1 group cursor-pointer rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-purple-500"
+            className="flex items-center gap-2 min-w-0 flex-1 group cursor-pointer rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-purple-500"
             aria-label={`View ${member.display_name}'s profile`}
           >
-            <Avatar src={member.avatar_url} fallback={member.display_name || 'A'} size="xs" glow={member.is_host} />
             <div className="min-w-0">
               <div className="text-xs font-black text-white group-hover:text-purple-300 transition-colors truncate flex items-center gap-1.5">
                 {member.display_name}
@@ -65,8 +63,7 @@ export function PlayerCard({ member, isCurrentUser, variant = 'lobby' }: PlayerC
             </div>
           </Link>
         ) : (
-          <div className="flex items-center gap-2.5 min-w-0 flex-1">
-            <Avatar src={member.avatar_url} fallback={member.display_name || 'A'} size="xs" glow={member.is_host} />
+          <div className="flex items-center gap-2 min-w-0 flex-1">
             <div className="min-w-0">
               <div className="text-xs font-black text-white truncate flex items-center gap-1.5">
                 {member.display_name}
@@ -100,26 +97,15 @@ export function PlayerCard({ member, isCurrentUser, variant = 'lobby' }: PlayerC
           : 'bg-neutral-950/70 border-neutral-800 hover:border-neutral-700 hover:bg-neutral-950/90'
       }`}
     >
-      {/* Clickable identity area — avatar + name + role */}
+      {/* Clickable identity area — name + role */}
       {profileHref ? (
         <Link
           href={profileHref}
           className="flex items-center gap-3 min-w-0 flex-1 cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-purple-500 rounded-xl"
           aria-label={`View ${member.display_name}'s public profile`}
         >
-          {/* Avatar with optional glow for host */}
-          <div className="transition-transform duration-150 group-hover:scale-105 shrink-0">
-            <Avatar
-              src={member.avatar_url}
-              fallback={member.display_name || 'Agent'}
-              size="sm"
-              glow={member.is_host}
-            />
-          </div>
-
-          {/* Name + role */}
           <div className="min-w-0">
-            <div className="text-sm font-black truncate max-w-[140px] sm:max-w-[180px] flex items-center gap-1.5 transition-colors duration-150 text-white group-hover:text-purple-300">
+            <div className="text-sm font-black truncate max-w-[170px] sm:max-w-[220px] flex items-center gap-1.5 transition-colors duration-150 text-white group-hover:text-purple-300">
               {member.display_name}
               {isCurrentUser && (
                 <span className="text-[9px] font-black uppercase text-purple-400 bg-purple-950/80 px-1.5 py-0.5 rounded border border-purple-800 leading-none">
@@ -138,14 +124,8 @@ export function PlayerCard({ member, isCurrentUser, variant = 'lobby' }: PlayerC
       ) : (
         /* Fallback when username is not available — non-clickable */
         <div className="flex items-center gap-3 min-w-0 flex-1">
-          <Avatar
-            src={member.avatar_url}
-            fallback={member.display_name || 'Agent'}
-            size="sm"
-            glow={member.is_host}
-          />
           <div className="min-w-0">
-            <div className="text-sm font-black text-white truncate max-w-[140px] sm:max-w-[180px] flex items-center gap-1.5">
+            <div className="text-sm font-black text-white truncate max-w-[170px] sm:max-w-[220px] flex items-center gap-1.5">
               {member.display_name}
               {isCurrentUser && (
                 <span className="text-[9px] font-black uppercase text-purple-400 bg-purple-950/80 px-1.5 py-0.5 rounded border border-purple-800 leading-none">

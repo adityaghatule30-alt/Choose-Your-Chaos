@@ -6,7 +6,6 @@ import Link from 'next/link'
 import { useAuth } from '@/components/AuthProvider'
 import { Room } from '@/types/rooms'
 import { GAME_DEFINITIONS } from '@/lib/games/definitions'
-import { Avatar } from '@/components/Avatar'
 import { Trophy, Medal, Sparkles, Home, RotateCcw, Flame, Crown, Target, Bot } from 'lucide-react'
 
 export default function RoomResultsPage({ params }: { params: Promise<{ code: string }> }) {
@@ -178,12 +177,6 @@ export default function RoomResultsPage({ params }: { params: Promise<{ code: st
                       href={profileHref}
                       className="flex items-center gap-2.5 min-w-0 group cursor-pointer"
                     >
-                      <Avatar
-                        src={m.avatar_url}
-                        fallback={m.display_name || 'A'}
-                        size="sm"
-                        glow={isWinner}
-                      />
                       <div className="text-left min-w-0">
                         <div className="text-sm font-black text-white group-hover:text-purple-300 transition-colors flex items-center gap-1.5 truncate">
                           <span className="truncate">{m.display_name}</span>
@@ -207,12 +200,6 @@ export default function RoomResultsPage({ params }: { params: Promise<{ code: st
                     </Link>
                   ) : (
                     <div className="flex items-center gap-2.5 min-w-0">
-                      <Avatar
-                        src={m.avatar_url}
-                        fallback={m.display_name || 'A'}
-                        size="sm"
-                        glow={isWinner}
-                      />
                       <div className="text-left min-w-0">
                         <div className="text-sm font-black text-white flex items-center gap-1.5 truncate">
                           <span className="truncate">{m.display_name}</span>

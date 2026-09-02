@@ -16,6 +16,11 @@ import {
   Sparkles,
   Users,
   Send,
+  Trophy,
+  Crown,
+  Check,
+  HelpCircle,
+  UserCheck,
 } from 'lucide-react'
 
 type RealtimeStatus = 'CONNECTING' | 'LIVE REALTIME' | 'RECONNECTING' | 'OFFLINE'
@@ -32,14 +37,17 @@ export default function RoomGameplayPage({ params }: { params: Promise<{ code: s
   const [textInput, setTextInput] = useState('')
   const [selectedVote, setSelectedVote] = useState<string | null>(null)
   const [submitting, setSubmitting] = useState(false)
+  const [voting, setVoting] = useState(false)
   const [advancing, setAdvancing] = useState(false)
   const [loading, setLoading] = useState(true)
+  const [imgLoading, setImgLoading] = useState(true)
   const [errorMsg, setErrorMsg] = useState<string | null>(null)
   const [realtimeStatus, setRealtimeStatus] = useState<RealtimeStatus>('CONNECTING')
   const [countdownSeconds, setCountdownSeconds] = useState<number | null>(null)
 
   const isMountedRef = useRef(true)
   const isInflightRef = useRef(false)
+  const lastRoundNumberRef = useRef<number | null>(null)
 
   const loadRoomState = useCallback(async (showLoading = false) => {
     if (isInflightRef.current) return
@@ -61,6 +69,13 @@ export default function RoomGameplayPage({ params }: { params: Promise<{ code: s
         setRoom(data.room)
         setSelectedChoice(data.room.user_answer || null)
         setSelectedVote(data.room.user_vote || null)
+
+        // Reset inputs on round transition
+        if (lastRoundNumberRef.current !== null && lastRoundNumberRef.current !== data.room.current_round) {
+          setTextInput('')
+          setImgLoading(true)
+        }
+        lastRoundNumberRef.current = data.room.current_round
 
         // Handle synchronized countdown calculation from server reveal_at timestamp
         const round = data.room.current_round_data
@@ -218,6 +233,37 @@ export default function RoomGameplayPage({ params }: { params: Promise<{ code: s
     }
   }
 
+  // Submit vote for caption in caption_battle
+  const handleSubmitVote = async (targetId: string) => {
+    if (!room?.current_round_data || voting || selectedVote) return
+    setSelectedVote(targetId)
+    setVoting(true)
+    setErrorMsg(null)
+
+    try {
+      const res = await fetch('/api/rooms/vote', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          round_id: room.current_round_data.id,
+          target_id: targetId,
+        }),
+      })
+      const data = await res.json()
+      if (data.success) {
+        loadRoomState()
+      } else {
+        setErrorMsg(data.message || 'Failed to record vote.')
+        setSelectedVote(null)
+      }
+    } catch {
+      setErrorMsg('Network error submitting vote.')
+      setSelectedVote(null)
+    } finally {
+      if (isMountedRef.current) setVoting(false)
+    }
+  }
+
   // Advance to next round (Host only)
   const handleNextRound = async () => {
     if (!room || advancing || !room.is_host) return
@@ -294,6 +340,7 @@ export default function RoomGameplayPage({ params }: { params: Promise<{ code: s
   const gameDef = GAME_DEFINITIONS[gameMode] || GAME_DEFINITIONS.either_or
   const isTarget = currentRound.target_user_id === user?.id
   const promptData = currentRound.prompt_data || {}
+  const meme = promptData.meme
 
   return (
     <div className="max-w-3xl mx-auto px-4 py-6 sm:py-10 animate-pop-in">
@@ -334,10 +381,83 @@ export default function RoomGameplayPage({ params }: { params: Promise<{ code: s
       )}
 
       {/* Main Game Screen */}
-      <div className="bg-neutral-900/90 backdrop-blur-xl border border-neutral-800 rounded-3xl p-6 sm:p-10 shadow-2xl relative overflow-hidden mb-6">
+      <div className="bg-neutral-900/90 backdrop-blur-xl border border-neutral-800 rounded-3xl p-5 sm:p-8 shadow-2xl relative overflow-hidden mb-6">
         <div className="absolute top-0 right-0 w-64 h-64 bg-purple-500/10 rounded-full blur-3xl -z-10" />
 
-        {/* 1. Pick For Me Mode */}
+        {/* ========================================================================= */}
+        {/* MEME DISPLAY (Who Sent This? & Caption Battle) */}
+        {/* ========================================================================= */}
+        {(gameMode === 'who_sent_this' || gameMode === 'caption_battle') && meme && (
+          <div className="mb-6 rounded-3xl overflow-hidden border border-neutral-800 bg-neutral-950 shadow-2xl relative group">
+            <div className="relative aspect-auto max-h-[360px] sm:max-h-[440px] flex items-center justify-center bg-black/60 p-2 sm:p-4 min-h-[220px]">
+              {imgLoading && (
+                <div className="absolute inset-0 flex flex-col items-center justify-center bg-neutral-950 animate-pulse z-10">
+                  <Flame className="w-8 h-8 text-yellow-400 animate-bounce mb-2" />
+                  <span className="text-xs font-black uppercase text-neutral-400">Loading Reddit Meme...</span>
+                </div>
+              )}
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={meme.url}
+                alt={meme.title || 'Reddit Meme'}
+                onLoad={() => setImgLoading(false)}
+                onError={(e) => {
+                  setImgLoading(false)
+                  e.currentTarget.src = 'https://images.unsplash.com/photo-1534972195531-a756b1126f24?auto=format&fit=crop&w=800&q=80'
+                }}
+                className="max-h-[340px] sm:max-h-[420px] w-auto max-w-full rounded-2xl object-contain shadow-md"
+              />
+            </div>
+            <div className="px-4 py-2.5 bg-neutral-900/90 border-t border-neutral-800 flex items-center justify-between text-[11px] text-neutral-400">
+              <span className="font-bold truncate max-w-[70%] text-neutral-300">
+                {meme.title}
+              </span>
+              <span className="font-mono text-purple-400 bg-purple-950/80 px-2 py-0.5 rounded border border-purple-800/80 text-[10px]">
+                r/{meme.subreddit}
+              </span>
+            </div>
+          </div>
+        )}
+
+        {/* 1. WHO SENT THIS? Mode */}
+        {gameMode === 'who_sent_this' && (
+          <div className="text-center mb-6">
+            <span className="text-[10px] font-black uppercase text-blue-400 tracking-widest block mb-1">
+              🕵️ MEME ACCUSATION
+            </span>
+            <h1 className="text-xl sm:text-2xl font-black text-white leading-snug">
+              WHO IN THIS ROOM WOULD SEND THIS? 💀
+            </h1>
+            <p className="text-xs text-neutral-400 mt-1">
+              Secretly accuse the friend who would definitely post or send this meme.
+            </p>
+          </div>
+        )}
+
+        {/* 2. CAPTION BATTLE Mode */}
+        {gameMode === 'caption_battle' && (
+          <div className="text-center mb-6">
+            <span className="text-[10px] font-black uppercase text-orange-400 tracking-widest block mb-1">
+              📸 ANONYMOUS CAPTION WAR
+            </span>
+            <h1 className="text-xl sm:text-2xl font-black text-white leading-snug">
+              {isRevealed
+                ? 'AND THE WINNER IS... 🏆'
+                : allAnswered
+                ? 'VOTE FOR THE FUNNIEST CAPTION 🗳️'
+                : 'CAPTION THIS 💀'}
+            </h1>
+            <p className="text-xs text-neutral-400 mt-1">
+              {isRevealed
+                ? 'The votes are in! Check out the funniest caption below.'
+                : allAnswered
+                ? 'Read the anonymous captions and pick your favorite.'
+                : 'Write your most unhinged caption for this meme.'}
+            </p>
+          </div>
+        )}
+
+        {/* 3. Pick For Me Mode */}
         {gameMode === 'pick_for_me' && (
           <div className="text-center mb-6">
             <span className="text-[10px] font-black uppercase text-pink-400 tracking-widest block mb-1">
@@ -354,7 +474,7 @@ export default function RoomGameplayPage({ params }: { params: Promise<{ code: s
           </div>
         )}
 
-        {/* 2. Either / Or Mode */}
+        {/* 4. Either / Or Mode */}
         {gameMode === 'either_or' && (
           <div className="text-center mb-6">
             <span className="text-[10px] font-black uppercase text-yellow-400 tracking-widest block mb-1">
@@ -366,7 +486,7 @@ export default function RoomGameplayPage({ params }: { params: Promise<{ code: s
           </div>
         )}
 
-        {/* 3. Mind Reader Mode */}
+        {/* 5. Mind Reader Mode */}
         {gameMode === 'mind_reader' && (
           <div className="text-center mb-6">
             <span className="text-[10px] font-black uppercase text-purple-400 tracking-widest block mb-1">
@@ -383,7 +503,7 @@ export default function RoomGameplayPage({ params }: { params: Promise<{ code: s
           </div>
         )}
 
-        {/* 4. Two Truths, One Chaos Mode */}
+        {/* 6. Two Truths, One Chaos Mode */}
         {gameMode === 'two_truths' && (
           <div className="text-center mb-6">
             <span className="text-[10px] font-black uppercase text-emerald-400 tracking-widest block mb-1">
@@ -394,6 +514,10 @@ export default function RoomGameplayPage({ params }: { params: Promise<{ code: s
             </h1>
           </div>
         )}
+
+        {/* ========================================================================= */}
+        {/* GAMEPLAY INPUT CONTROLS */}
+        {/* ========================================================================= */}
 
         {/* Binary Choices (Either/Or, Pick For Me, Mind Reader) */}
         {(gameMode === 'either_or' || gameMode === 'pick_for_me' || gameMode === 'mind_reader') && currentRound.question && (
@@ -439,6 +563,143 @@ export default function RoomGameplayPage({ params }: { params: Promise<{ code: s
                 </span>
               </div>
             </button>
+          </div>
+        )}
+
+        {/* WHO SENT THIS?: Selectable Player Candidate Cards */}
+        {gameMode === 'who_sent_this' && !isRevealed && (
+          <div className="mb-6 space-y-3">
+            <div className="text-xs font-black uppercase text-neutral-400 px-1 tracking-wider">
+              SELECT SUSPECT:
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              {members
+                .filter((m) => m.user_id !== user?.id)
+                .map((candidate) => {
+                  const isSelected = selectedChoice === candidate.user_id
+
+                  return (
+                    <button
+                      key={candidate.user_id}
+                      type="button"
+                      disabled={submitting || Boolean(selectedChoice)}
+                      onClick={() => handleSubmitAnswer(candidate.user_id)}
+                      className={`p-4 rounded-2xl border text-left transition-all active-press flex items-center justify-between gap-3 ${
+                        isSelected
+                          ? 'bg-blue-950/80 border-blue-400 ring-2 ring-blue-500/40 text-white shadow-lg'
+                          : 'bg-neutral-950 hover:bg-neutral-900 border-neutral-800 hover:border-neutral-700 text-neutral-200 cursor-pointer'
+                      }`}
+                    >
+                      <div className="flex items-center gap-3 min-w-0">
+                        <div className={`w-9 h-9 rounded-xl flex items-center justify-center font-black text-xs ${
+                          isSelected ? 'bg-blue-600 text-white' : 'bg-neutral-900 text-neutral-400 border border-neutral-800'
+                        }`}>
+                          {candidate.display_name.charAt(0).toUpperCase()}
+                        </div>
+                        <div className="min-w-0">
+                          <div className="text-xs sm:text-sm font-black truncate">{candidate.display_name}</div>
+                          <div className="text-[10px] text-neutral-500 font-mono truncate">@{candidate.username || 'agent'}</div>
+                        </div>
+                      </div>
+
+                      <div className={`w-5 h-5 rounded-full border flex items-center justify-center shrink-0 ${
+                        isSelected ? 'bg-blue-500 border-blue-400 text-white' : 'border-neutral-700'
+                      }`}>
+                        {isSelected && <Check className="w-3 h-3 stroke-[3]" />}
+                      </div>
+                    </button>
+                  )
+                })}
+            </div>
+          </div>
+        )}
+
+        {/* CAPTION BATTLE: Phase 1 - Write Caption */}
+        {gameMode === 'caption_battle' && !selectedChoice && !isRevealed && (
+          <form
+            onSubmit={(e) => {
+              e.preventDefault()
+              handleSubmitAnswer(textInput)
+            }}
+            className="mb-6 space-y-3"
+          >
+            <div className="relative">
+              <textarea
+                value={textInput}
+                onChange={(e) => setTextInput(e.target.value)}
+                placeholder="Type your unhinged meme caption..."
+                disabled={submitting}
+                maxLength={140}
+                rows={3}
+                className="w-full bg-neutral-950 border border-neutral-800 rounded-2xl p-4 text-white text-sm placeholder-neutral-500 focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500 transition-all resize-none disabled:opacity-50"
+              />
+              <span className="absolute bottom-3 right-3 text-[10px] font-mono text-neutral-500">
+                {textInput.length}/140
+              </span>
+            </div>
+
+            <button
+              type="submit"
+              disabled={submitting || !textInput.trim()}
+              className="w-full py-3.5 px-6 bg-gradient-to-r from-orange-500 to-red-500 hover:opacity-95 text-white font-black text-xs uppercase tracking-wider rounded-xl transition-all active-press disabled:opacity-50 flex items-center justify-center gap-2 cursor-pointer shadow-lg shadow-orange-500/20"
+            >
+              <Send className="w-4 h-4" /> LOCK IN CAPTION 🔥
+            </button>
+          </form>
+        )}
+
+        {/* CAPTION BATTLE: Phase 2 - Anonymous Caption Voting */}
+        {gameMode === 'caption_battle' && selectedChoice && !isRevealed && promptData.anonymousCaptions && (
+          <div className="mb-6 space-y-3">
+            <div className="text-xs font-black uppercase text-orange-400 px-1 tracking-wider flex items-center justify-between">
+              <span>VOTE FOR BEST CAPTION:</span>
+              <span className="text-[10px] text-neutral-500 font-bold">You cannot vote for your own</span>
+            </div>
+
+            <div className="space-y-2">
+              {promptData.anonymousCaptions.map((cap: any) => {
+                const isSelected = selectedVote === cap.id
+                const isOwn = cap.isOwn
+
+                return (
+                  <button
+                    key={cap.id}
+                    type="button"
+                    disabled={voting || Boolean(selectedVote) || isOwn}
+                    onClick={() => handleSubmitVote(cap.id)}
+                    className={`w-full p-4 rounded-2xl border text-left transition-all active-press flex items-center justify-between gap-3 ${
+                      isSelected
+                        ? 'bg-orange-950/80 border-orange-400 ring-2 ring-orange-500/40 text-white shadow-lg'
+                        : isOwn
+                        ? 'bg-neutral-950/50 border-neutral-850 text-neutral-500 cursor-not-allowed opacity-75'
+                        : 'bg-neutral-950 hover:bg-neutral-900 border-neutral-800 hover:border-neutral-700 text-neutral-200 cursor-pointer'
+                    }`}
+                  >
+                    <div className="min-w-0 pr-2">
+                      <div className="flex items-center gap-2 mb-1">
+                        <span className="text-[10px] font-black uppercase text-orange-400 tracking-wider">
+                          {cap.label}
+                        </span>
+                        {isOwn && (
+                          <span className="text-[9px] font-bold bg-neutral-800 text-neutral-400 px-1.5 py-0.2 rounded">
+                            YOUR CAPTION
+                          </span>
+                        )}
+                      </div>
+                      <p className="text-xs sm:text-sm font-bold text-white leading-snug">
+                        "{cap.caption}"
+                      </p>
+                    </div>
+
+                    <div className={`w-5 h-5 rounded-full border flex items-center justify-center shrink-0 ${
+                      isSelected ? 'bg-orange-500 border-orange-400 text-white' : 'border-neutral-700'
+                    }`}>
+                      {isSelected && <Check className="w-3 h-3 stroke-[3]" />}
+                    </div>
+                  </button>
+                )
+              })}
+            </div>
           </div>
         )}
 
@@ -497,15 +758,75 @@ export default function RoomGameplayPage({ params }: { params: Promise<{ code: s
           </div>
         )}
 
-        {/* Revealed Results Grid */}
-        {isRevealed && currentRound.answers && currentRound.answers.length > 0 && (
-          <div className="space-y-3 mb-6 animate-pop-in">
-            {/* Pick For Me Reveal Banner */}
+        {/* ========================================================================= */}
+        {/* REVEALED RESULTS */}
+        {/* ========================================================================= */}
+        {isRevealed && (
+          <div className="space-y-4 mb-6 animate-pop-in">
+            {/* 1. WHO SENT THIS? Reveal */}
+            {gameMode === 'who_sent_this' && currentRound.stats && (
+              <div className="p-5 bg-blue-950/40 border border-blue-800/80 rounded-3xl text-center space-y-3">
+                <div className="w-12 h-12 rounded-2xl bg-blue-900/60 border border-blue-700 flex items-center justify-center text-2xl mx-auto shadow">
+                  💀
+                </div>
+                <div>
+                  <span className="text-[10px] font-black uppercase text-blue-400 tracking-wider block mb-1">
+                    TOP ACCUSED SUSPECT
+                  </span>
+                  <h3 className="text-lg sm:text-2xl font-black text-white">
+                    Everyone thinks {currentRound.stats.topAccusedName} would send this! 💀
+                  </h3>
+                  <p className="text-xs text-blue-300 font-bold mt-1">
+                    Received {currentRound.stats.maxVotes} votes from the squad
+                  </p>
+                </div>
+
+                <div className="pt-3 border-t border-blue-800/50 flex flex-wrap items-center justify-center gap-2">
+                  <span className="px-2.5 py-1 bg-blue-900/80 text-blue-200 text-xs font-black rounded-lg border border-blue-700">
+                    🎯 +20 PTS Meme Target Magnet
+                  </span>
+                  <span className="px-2.5 py-1 bg-emerald-950 text-emerald-300 text-xs font-black rounded-lg border border-emerald-800">
+                    🕵️ +30 PTS Accusation Accuracy
+                  </span>
+                </div>
+              </div>
+            )}
+
+            {/* 2. CAPTION BATTLE Winner Reveal */}
+            {gameMode === 'caption_battle' && currentRound.stats && (
+              <div className="p-5 bg-orange-950/40 border border-orange-800/80 rounded-3xl text-center space-y-3">
+                <div className="w-12 h-12 rounded-2xl bg-orange-900/60 border border-orange-700 flex items-center justify-center text-2xl mx-auto shadow">
+                  🏆
+                </div>
+                <div>
+                  <span className="text-[10px] font-black uppercase text-orange-400 tracking-wider block mb-1">
+                    WINNING FUNNIEST CAPTION
+                  </span>
+                  <blockquote className="text-lg sm:text-2xl font-black text-white italic px-4">
+                    "{currentRound.stats.winningCaption}"
+                  </blockquote>
+                  <p className="text-xs text-orange-300 font-bold mt-1.5">
+                    Written by <span className="text-white font-black">{currentRound.stats.winningAuthorName}</span> • {currentRound.stats.winningVotes} Votes
+                  </p>
+                </div>
+
+                <div className="pt-3 border-t border-orange-800/50 flex flex-wrap items-center justify-center gap-2">
+                  <span className="px-2.5 py-1 bg-orange-900/80 text-orange-200 text-xs font-black rounded-lg border border-orange-700">
+                    👑 +40 PTS Funniest Caption Crown
+                  </span>
+                  <span className="px-2.5 py-1 bg-emerald-950 text-emerald-300 text-xs font-black rounded-lg border border-emerald-800">
+                    🎭 +20 PTS Comedy Connoisseur
+                  </span>
+                </div>
+              </div>
+            )}
+
+            {/* 3. Pick For Me Reveal Banner */}
             {gameMode === 'pick_for_me' && (
-              <div className="text-center p-3.5 bg-pink-950/40 border border-pink-800/80 rounded-2xl mb-3">
+              <div className="text-center p-3.5 bg-pink-950/40 border border-pink-800/80 rounded-2xl">
                 {(() => {
-                  const targetAns = currentRound.answers.find((a) => a.user_id === currentRound.target_user_id)?.answer
-                  const predictorAns = currentRound.answers.find((a) => a.user_id !== currentRound.target_user_id)?.answer
+                  const targetAns = currentRound.answers?.find((a) => a.user_id === currentRound.target_user_id)?.answer
+                  const predictorAns = currentRound.answers?.find((a) => a.user_id !== currentRound.target_user_id)?.answer
                   const isMatch = targetAns && predictorAns && targetAns === predictorAns
 
                   return isMatch ? (
@@ -523,34 +844,43 @@ export default function RoomGameplayPage({ params }: { params: Promise<{ code: s
               </div>
             )}
 
-            <span className="text-[11px] font-black uppercase text-neutral-400 tracking-wider block mb-2 text-center">
-              🎉 SQUAD ANSWERS & REVEAL
-            </span>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              {currentRound.answers.map((ans, idx) => {
-                const optText = ans.answer === 'A'
-                  ? currentRound.question?.option_a
-                  : ans.answer === 'B'
-                  ? currentRound.question?.option_b
-                  : ans.answer
+            {/* Squad Answers Breakdown Grid */}
+            {currentRound.answers && currentRound.answers.length > 0 && (
+              <div>
+                <span className="text-[11px] font-black uppercase text-neutral-400 tracking-wider block mb-2 text-center">
+                  🎉 SQUAD SUBMISSIONS
+                </span>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  {currentRound.answers.map((ans, idx) => {
+                    let displayContent = ans.answer
+                    if (gameMode === 'who_sent_this') {
+                      const accusedMember = members.find((m) => m.user_id === ans.answer)
+                      displayContent = `Accused: ${accusedMember?.display_name || 'Nobody'}`
+                    } else if (ans.answer === 'A') {
+                      displayContent = `Option A: ${currentRound.question?.option_a || 'A'}`
+                    } else if (ans.answer === 'B') {
+                      displayContent = `Option B: ${currentRound.question?.option_b || 'B'}`
+                    }
 
-                return (
-                  <div
-                    key={idx}
-                    className="p-4 bg-neutral-950 border border-neutral-800 rounded-2xl flex items-center justify-between"
-                  >
-                    <div>
-                      <span className="text-[10px] text-purple-400 font-bold uppercase block">
-                        {ans.display_name}
-                      </span>
-                      <span className="text-sm font-black text-white">
-                        {ans.answer === 'A' || ans.answer === 'B' ? `Option ${ans.answer}: ${optText}` : ans.answer}
-                      </span>
-                    </div>
-                  </div>
-                )
-              })}
-            </div>
+                    return (
+                      <div
+                        key={idx}
+                        className="p-4 bg-neutral-950 border border-neutral-800 rounded-2xl flex items-center justify-between"
+                      >
+                        <div className="min-w-0 pr-2">
+                          <span className="text-[10px] text-purple-400 font-bold uppercase block">
+                            {ans.display_name}
+                          </span>
+                          <span className="text-xs sm:text-sm font-black text-white truncate block">
+                            {displayContent}
+                          </span>
+                        </div>
+                      </div>
+                    )
+                  })}
+                </div>
+              </div>
+            )}
           </div>
         )}
 

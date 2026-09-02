@@ -5,7 +5,6 @@ import { useRouter, usePathname } from 'next/navigation'
 import { useState } from 'react'
 import { useAuth } from '@/components/AuthProvider'
 import { getLevelFromXP } from '@/lib/progression'
-import { Avatar } from '@/components/Avatar'
 import {
   Flame,
   User as UserIcon,
@@ -113,14 +112,13 @@ export function Navbar() {
             <div className="relative">
               <button
                 onClick={() => setMenuOpen(!menuOpen)}
-                className="flex items-center gap-2 bg-neutral-900 hover:bg-neutral-850 border border-neutral-750 rounded-full py-1 px-2.5 sm:px-3 transition-all cursor-pointer shadow-md"
+                className="flex items-center gap-2 bg-neutral-900 hover:bg-neutral-850 border border-neutral-750 rounded-2xl py-1.5 px-3 sm:px-3.5 transition-all cursor-pointer shadow-md"
               >
-                <Avatar src={profile?.avatar_url} fallback={profile?.username || 'U'} size="sm" />
-                <div className="text-left hidden sm:block">
-                  <div className="text-xs font-bold text-white leading-tight truncate max-w-[90px]">
+                <div className="text-left">
+                  <div className="text-xs font-black text-white leading-tight truncate max-w-[110px]">
                     {profile?.display_name || profile?.username || 'Agent'}
                   </div>
-                  <div className="text-[10px] text-yellow-400 font-bold">
+                  <div className="text-[10px] text-yellow-400 font-bold leading-none mt-0.5">
                     LVL {levelInfo.level} • {profile?.xp || 0} XP
                   </div>
                 </div>
@@ -169,7 +167,7 @@ export function Navbar() {
                     onClick={() => setMenuOpen(false)}
                     className="flex items-center gap-2 px-3 py-2 text-neutral-300 hover:text-white hover:bg-neutral-800 rounded-xl transition-colors font-semibold text-xs"
                   >
-                    <Settings className="w-4 h-4 text-yellow-400" /> Choose Avatar & Edit Profile
+                    <Settings className="w-4 h-4 text-yellow-400" /> Customize Identity
                   </Link>
 
                   {profile?.role === 'admin' && (

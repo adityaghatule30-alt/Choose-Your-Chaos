@@ -13,6 +13,8 @@ import {
   UserCheck,
   HelpCircle,
   Check,
+  Image as ImageIcon,
+  Flame,
 } from 'lucide-react'
 
 const ICONS_MAP: Record<string, any> = {
@@ -20,6 +22,8 @@ const ICONS_MAP: Record<string, any> = {
   Play,
   Sparkles,
   HelpCircle,
+  Image: ImageIcon,
+  Flame,
 }
 
 export default function CreateRoomPage() {

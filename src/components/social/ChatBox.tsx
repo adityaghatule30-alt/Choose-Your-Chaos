@@ -22,7 +22,6 @@ import Link from 'next/link'
 import { useAuth } from '@/components/AuthProvider'
 import { DirectMessage, FriendProfile } from '@/types/social'
 import { createClient } from '@/lib/supabase/client'
-import { Avatar } from '@/components/Avatar'
 import {
   Send,
   ArrowLeft,
@@ -298,14 +297,11 @@ export function ChatBox({ friend, onClose }: ChatBoxProps) {
             <button
               onClick={onClose}
               aria-label="Close chat"
-              className="p-1 text-neutral-400 hover:text-white rounded-lg transition-colors cursor-pointer shrink-0"
+              className="p-1.5 text-neutral-400 hover:text-white rounded-lg transition-colors cursor-pointer shrink-0 active-press"
             >
               <ArrowLeft className="w-4 h-4" />
             </button>
           )}
-          <Link href={`/user/${friend.username}`} className="shrink-0">
-            <Avatar src={friend.avatar_url} fallback={friend.username || 'F'} size="sm" />
-          </Link>
           <div className="min-w-0">
             <Link
               href={`/user/${friend.username}`}
