@@ -10,24 +10,15 @@ import {
   Users,
   Sparkles,
   ArrowRight,
-  Skull,
   UserCheck,
-  Eye,
   HelpCircle,
-  Camera,
 } from 'lucide-react'
 
 const ICONS_MAP: Record<string, any> = {
+  UserCheck,
   Play,
   Sparkles,
-  Skull,
-  ShieldAlert,
-  UserCheck,
-  Eye,
-  Flame,
   HelpCircle,
-  Camera,
-  Users,
 }
 
 export default function GamesHubPage() {
@@ -69,7 +60,7 @@ export default function GamesHubPage() {
     {
       title: 'Chaos Room Arena',
       badge: 'MULTIPLAYER PARTY',
-      description: 'Host private multiplayer matches across all 10 game modes with instant codes and sync.',
+      description: 'Host private multiplayer matches across all 4 game modes with instant codes and sync.',
       href: '/rooms',
       icon: Users,
       accentText: 'text-purple-400',

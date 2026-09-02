@@ -7,7 +7,7 @@ import { useAuth } from '@/components/AuthProvider'
 import { Room } from '@/types/rooms'
 import { GAME_DEFINITIONS } from '@/lib/games/definitions'
 import { Avatar } from '@/components/Avatar'
-import { Trophy, Medal, Sparkles, Home, RotateCcw, Flame, Crown, Brain, Target, Bot } from 'lucide-react'
+import { Trophy, Medal, Sparkles, Home, RotateCcw, Flame, Crown, Target, Bot } from 'lucide-react'
 
 export default function RoomResultsPage({ params }: { params: Promise<{ code: string }> }) {
   const resolvedParams = use(params)
@@ -19,7 +19,6 @@ export default function RoomResultsPage({ params }: { params: Promise<{ code: st
   const [room, setRoom] = useState<Room | null>(null)
   const [loading, setLoading] = useState(true)
   const [aiReaction, setAiReaction] = useState<string | null>(null)
-  const [sameBrainMatches, setSameBrainMatches] = useState<number | null>(null)
   const [pickForMeStats, setPickForMeStats] = useState<Array<{
     userId: string
     displayName: string
@@ -47,7 +46,6 @@ export default function RoomResultsPage({ params }: { params: Promise<{ code: st
         const reactionData = await reactionRes.json()
         if (reactionData.success) {
           if (reactionData.reaction) setAiReaction(reactionData.reaction)
-          if (reactionData.sameBrainMatches !== undefined) setSameBrainMatches(reactionData.sameBrainMatches)
           if (reactionData.pickForMeStats) setPickForMeStats(reactionData.pickForMeStats)
         }
       } finally {
@@ -68,7 +66,6 @@ export default function RoomResultsPage({ params }: { params: Promise<{ code: st
 
   const members = room?.members || []
   const winner = members[0]
-  const isSameBrain = room?.game_mode === 'same_brain'
   const isPickForMe = room?.game_mode === 'pick_for_me'
   const totalRounds = room?.total_rounds || 10
   const gameDef = room ? (GAME_DEFINITIONS[room.game_mode] || GAME_DEFINITIONS.either_or) : GAME_DEFINITIONS.either_or
@@ -77,9 +74,7 @@ export default function RoomResultsPage({ params }: { params: Promise<{ code: st
     <div className="max-w-xl mx-auto px-4 py-8 sm:py-14 text-center animate-pop-in">
       {/* Header Icon */}
       <div className="inline-flex p-4 bg-yellow-500/10 border border-yellow-500/30 rounded-3xl mb-4 shadow-xl">
-        {isSameBrain ? (
-          <Brain className="w-12 h-12 text-purple-400 animate-bounce" />
-        ) : isPickForMe ? (
+        {isPickForMe ? (
           <Target className="w-12 h-12 text-pink-400 animate-bounce" />
         ) : (
           <Trophy className="w-12 h-12 text-yellow-400 animate-bounce" />
@@ -95,31 +90,10 @@ export default function RoomResultsPage({ params }: { params: Promise<{ code: st
       </h1>
 
       <p className="text-xs text-neutral-400 mb-6 font-medium">
-        {isSameBrain
-          ? 'Here is how in sync your minds were in the arena:'
-          : isPickForMe
+        {isPickForMe
           ? 'Here is how accurately you predicted each other:'
           : 'Here is how your squad ranked in the arena:'}
       </p>
-
-      {/* Same Brain Specialized Stat Card */}
-      {isSameBrain && sameBrainMatches !== null && (
-        <div className="bg-purple-950/30 border border-purple-800/80 rounded-3xl p-5 mb-6 shadow-xl text-center">
-          <span className="text-[11px] font-black uppercase tracking-widest text-purple-400 block mb-1">
-            BRAIN SYNCHRONIZATION
-          </span>
-          <div className="text-3xl sm:text-4xl font-black text-white">
-            {sameBrainMatches} / {totalRounds} <span className="text-purple-400 text-lg sm:text-xl font-bold">MATCHES</span>
-          </div>
-          <p className="text-[11px] text-neutral-400 mt-1">
-            {sameBrainMatches >= 7
-              ? '🔥 Telepathic link active!'
-              : sameBrainMatches >= 4
-              ? '⚡ Semi-synchronized chaos.'
-              : '💀 Incompatible frequencies.'}
-          </p>
-        </div>
-      )}
 
       {/* Pick For Me Specialized Stats Cards */}
       {isPickForMe && pickForMeStats && (

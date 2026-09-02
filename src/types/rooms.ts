@@ -1,14 +1,8 @@
 export type GameMode =
-  | 'either_or'
-  | 'same_brain'
   | 'pick_for_me'
+  | 'either_or'
   | 'mind_reader'
-  | 'worst_answer'
-  | 'imposter'
-  | 'guess_player'
-  | 'chain_reaction'
   | 'two_truths'
-  | 'caption_chaos'
 
 export interface RoomMember {
   id: string

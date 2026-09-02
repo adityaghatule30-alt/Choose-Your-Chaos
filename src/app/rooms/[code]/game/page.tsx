@@ -337,22 +337,7 @@ export default function RoomGameplayPage({ params }: { params: Promise<{ code: s
       <div className="bg-neutral-900/90 backdrop-blur-xl border border-neutral-800 rounded-3xl p-6 sm:p-10 shadow-2xl relative overflow-hidden mb-6">
         <div className="absolute top-0 right-0 w-64 h-64 bg-purple-500/10 rounded-full blur-3xl -z-10" />
 
-        {/* 1. Same Brain Mode */}
-        {gameMode === 'same_brain' && (
-          <div className="text-center mb-6">
-            <span className="text-[10px] font-black uppercase text-purple-400 tracking-widest block mb-1">
-              🧠 SAME BRAIN • PICK THE SAME CHOICE
-            </span>
-            <h1 className="text-xl sm:text-2xl font-black text-white leading-snug">
-              Try to choose the exact same option as your partner!
-            </h1>
-            <p className="text-xs text-neutral-400 mt-1 font-bold">
-              "{currentRound.question?.question || 'Would you rather...'}"
-            </p>
-          </div>
-        )}
-
-        {/* 2. Pick For Me Mode */}
+        {/* 1. Pick For Me Mode */}
         {gameMode === 'pick_for_me' && (
           <div className="text-center mb-6">
             <span className="text-[10px] font-black uppercase text-pink-400 tracking-widest block mb-1">
@@ -366,6 +351,18 @@ export default function RoomGameplayPage({ params }: { params: Promise<{ code: s
             <p className="text-xs text-neutral-400 mt-1 font-bold">
               "{currentRound.question?.question || 'Would you rather...'}"
             </p>
+          </div>
+        )}
+
+        {/* 2. Either / Or Mode */}
+        {gameMode === 'either_or' && (
+          <div className="text-center mb-6">
+            <span className="text-[10px] font-black uppercase text-yellow-400 tracking-widest block mb-1">
+              WOULD YOU RATHER...
+            </span>
+            <h1 className="text-xl sm:text-3xl font-black text-white leading-snug">
+              "{currentRound.question?.question}"
+            </h1>
           </div>
         )}
 
@@ -386,56 +383,20 @@ export default function RoomGameplayPage({ params }: { params: Promise<{ code: s
           </div>
         )}
 
-        {/* 4. Worst Answer Wins / Caption Chaos */}
-        {(gameMode === 'worst_answer' || gameMode === 'caption_chaos') && (
+        {/* 4. Two Truths, One Chaos Mode */}
+        {gameMode === 'two_truths' && (
           <div className="text-center mb-6">
-            <span className="text-[10px] font-black uppercase text-red-400 tracking-widest block mb-1">
-              {gameMode === 'worst_answer' ? '💀 WORST ANSWER CHALLENGE' : '📸 CAPTION CHALLENGE'}
+            <span className="text-[10px] font-black uppercase text-emerald-400 tracking-widest block mb-1">
+              🃏 TWO TRUTHS, ONE CHAOS
             </span>
             <h1 className="text-xl sm:text-2xl font-black text-white leading-snug">
-              "{promptData.prompt || currentRound.question?.question || 'Give your most unhinged answer'}"
+              "{promptData.situation || 'Spot the fake statement among the truths'}"
             </h1>
           </div>
         )}
 
-        {/* 5. Imposter Mode */}
-        {gameMode === 'imposter' && (
-          <div className="text-center mb-6">
-            <span className="text-[10px] font-black uppercase text-pink-400 tracking-widest block mb-1">
-              {currentRound.is_imposter ? '🕵️ YOU ARE THE SECRET IMPOSTER' : '🎭 SQUAD MEMBER'}
-            </span>
-            <h1 className="text-xl sm:text-2xl font-black text-white leading-snug">
-              "{currentRound.is_imposter ? promptData.imposterPrompt : promptData.crewPrompt || 'Answer the prompt'}"
-            </h1>
-          </div>
-        )}
-
-        {/* 6. Other Game Modes */}
-        {(gameMode === 'guess_player' || gameMode === 'chain_reaction' || gameMode === 'two_truths') && (
-          <div className="text-center mb-6">
-            <span className="text-[10px] font-black uppercase text-yellow-400 tracking-widest block mb-1">
-              {gameMode === 'chain_reaction' ? '🧨 CHAIN REACTION STORY' : gameDef.badge}
-            </span>
-            <h1 className="text-xl sm:text-2xl font-black text-white leading-snug">
-              "{promptData.prompt || promptData.starter || promptData.situation || 'Squad Challenge'}"
-            </h1>
-          </div>
-        )}
-
-        {/* 7. Either / Or Default Setup */}
-        {gameMode === 'either_or' && (
-          <div className="text-center mb-6">
-            <span className="text-[10px] font-black uppercase text-yellow-400 tracking-widest block mb-1">
-              WOULD YOU RATHER...
-            </span>
-            <h1 className="text-xl sm:text-3xl font-black text-white leading-snug">
-              "{currentRound.question?.question}"
-            </h1>
-          </div>
-        )}
-
-        {/* Binary Choices (Either/Or, Same Brain, Pick For Me, Mind Reader) */}
-        {(gameMode === 'either_or' || gameMode === 'same_brain' || gameMode === 'pick_for_me' || gameMode === 'mind_reader') && currentRound.question && (
+        {/* Binary Choices (Either/Or, Pick For Me, Mind Reader) */}
+        {(gameMode === 'either_or' || gameMode === 'pick_for_me' || gameMode === 'mind_reader') && currentRound.question && (
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
             <button
               onClick={() => handleSubmitAnswer('A')}
@@ -481,8 +442,8 @@ export default function RoomGameplayPage({ params }: { params: Promise<{ code: s
           </div>
         )}
 
-        {/* Text Input for Custom Answer Games */}
-        {gameMode !== 'either_or' && gameMode !== 'same_brain' && gameMode !== 'pick_for_me' && gameMode !== 'mind_reader' && !selectedChoice && (
+        {/* Text / Statements Input for Two Truths */}
+        {gameMode === 'two_truths' && !selectedChoice && (
           <form
             onSubmit={(e) => {
               e.preventDefault()
@@ -493,7 +454,7 @@ export default function RoomGameplayPage({ params }: { params: Promise<{ code: s
             <textarea
               value={textInput}
               onChange={(e) => setTextInput(e.target.value)}
-              placeholder="Type your response here..."
+              placeholder="Type which statement is the lie..."
               disabled={submitting}
               maxLength={200}
               rows={3}
@@ -539,24 +500,6 @@ export default function RoomGameplayPage({ params }: { params: Promise<{ code: s
         {/* Revealed Results Grid */}
         {isRevealed && currentRound.answers && currentRound.answers.length > 0 && (
           <div className="space-y-3 mb-6 animate-pop-in">
-            {/* Same Brain Reveal Banner */}
-            {gameMode === 'same_brain' && (
-              <div className="text-center p-3.5 bg-purple-950/40 border border-purple-800/80 rounded-2xl mb-3">
-                {currentRound.answers.length >= 2 &&
-                currentRound.answers[0].answer === currentRound.answers[1].answer ? (
-                  <div className="text-emerald-400 font-black text-sm sm:text-base flex items-center justify-center gap-2">
-                    <span>🧠 SAME BRAIN MATCH!</span>
-                    <span className="bg-emerald-950 text-emerald-300 px-2 py-0.5 rounded text-xs border border-emerald-800">+20 PTS EACH 🔥</span>
-                  </div>
-                ) : (
-                  <div className="text-red-400 font-black text-sm flex items-center justify-center gap-2">
-                    <span>❌ DIFFERENT BRAINS!</span>
-                    <span className="text-neutral-400 text-xs font-semibold">(0 PTS)</span>
-                  </div>
-                )}
-              </div>
-            )}
-
             {/* Pick For Me Reveal Banner */}
             {gameMode === 'pick_for_me' && (
               <div className="text-center p-3.5 bg-pink-950/40 border border-pink-800/80 rounded-2xl mb-3">

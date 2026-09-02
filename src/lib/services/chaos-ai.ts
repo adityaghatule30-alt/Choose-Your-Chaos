@@ -104,7 +104,6 @@ Generate 1 short, witty, contextual roast according to your system instruction.`
 export interface MatchResultParams {
   gameMode: string
   totalRounds: number
-  sameBrainMatches?: number
   pickForMeStats?: Array<{
     userId: string
     displayName: string
@@ -121,7 +120,6 @@ export interface MatchResultParams {
 export async function generateMatchResultReaction({
   gameMode,
   totalRounds,
-  sameBrainMatches,
   pickForMeStats,
   playerScores,
 }: MatchResultParams): Promise<string> {
@@ -129,13 +127,7 @@ export async function generateMatchResultReaction({
 
   // Default smart fallbacks
   let fallback = "Match concluded in total chaos! 💀"
-  if (gameMode === 'same_brain') {
-    const m = sameBrainMatches ?? 0
-    if (m >= 8) fallback = "You two share one brain cell and apparently it has excellent attendance. 💀"
-    else if (m >= 5) fallback = "Semi-synchronized thinking. You agree on chaos, disagree on common sense. 🧠"
-    else if (m >= 2) fallback = "Same brain? More like neighboring Wi-Fi networks with weak connection. 😭"
-    else fallback = "Congratulations, you've discovered two completely incompatible operating systems. 💀"
-  } else if (gameMode === 'pick_for_me') {
+  if (gameMode === 'pick_for_me') {
     const p1 = pickForMeStats?.[0]
     const p2 = pickForMeStats?.[1]
     if (p1 && p2) {
@@ -158,10 +150,7 @@ export async function generateMatchResultReaction({
     const model = process.env.GEMINI_MODEL || 'gemini-2.5-flash'
 
     let contextDetails = `Game Mode: ${gameMode}\nTotal Rounds: ${totalRounds}\n`
-    if (gameMode === 'same_brain') {
-      contextDetails += `Matches: ${sameBrainMatches ?? 0} out of ${totalRounds} rounds\n`
-      contextDetails += `Players: ${playerScores.map(p => `${p.displayName} (${p.score} PTS)`).join(', ')}`
-    } else if (gameMode === 'pick_for_me' && pickForMeStats) {
+    if (gameMode === 'pick_for_me' && pickForMeStats) {
       contextDetails += `Prediction Accuracy:\n${pickForMeStats.map(p => `- ${p.displayName}: ${p.correct}/${p.total} correct predictions (${p.score} PTS)`).join('\n')}`
     } else {
       contextDetails += `Players: ${playerScores.map(p => `${p.displayName} (${p.score} PTS)`).join(', ')}`

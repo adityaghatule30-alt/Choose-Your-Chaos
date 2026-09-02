@@ -1,14 +1,8 @@
 export type GameMode =
-  | 'either_or'
-  | 'same_brain'
   | 'pick_for_me'
+  | 'either_or'
   | 'mind_reader'
-  | 'worst_answer'
-  | 'imposter'
-  | 'guess_player'
-  | 'chain_reaction'
   | 'two_truths'
-  | 'caption_chaos'
 
 export interface GameDefinition {
   id: GameMode
@@ -25,19 +19,6 @@ export interface GameDefinition {
 }
 
 export const GAME_DEFINITIONS: Record<GameMode, GameDefinition> = {
-  same_brain: {
-    id: 'same_brain',
-    title: '🧠 SAME BRAIN',
-    subtitle: 'Choose The Same Answer',
-    description: 'Two players answer independently. The goal is to choose the exact same option for +20 PTS each.',
-    shortDescription: 'Match your partner’s choice.',
-    iconName: 'Sparkles',
-    badge: '2-PLAYER SYNERGY',
-    accentColor: 'purple',
-    minPlayers: 2,
-    maxPlayers: 2,
-    supportsAI: true,
-  },
   pick_for_me: {
     id: 'pick_for_me',
     title: '😭 PICK FOR ME',
@@ -77,80 +58,15 @@ export const GAME_DEFINITIONS: Record<GameMode, GameDefinition> = {
     maxPlayers: 10,
     supportsAI: true,
   },
-  worst_answer: {
-    id: 'worst_answer',
-    title: '💀 WORST ANSWER WINS',
-    subtitle: 'Unhinged Comedy Showdown',
-    description: 'Submit the worst, most chaotic response to a normal situation. Funniest disaster wins.',
-    shortDescription: 'Funniest disaster answer wins.',
-    iconName: 'Skull',
-    badge: 'DARK COMEDY',
-    accentColor: 'red',
-    minPlayers: 2,
-    maxPlayers: 10,
-    supportsAI: true,
-  },
-  imposter: {
-    id: 'imposter',
-    title: '🎭 IMPOSTER',
-    subtitle: 'Find The Secret Outsider',
-    description: 'Everyone receives the exact same prompt, except for one secret imposter. Vote them out.',
-    shortDescription: 'Spot the hidden imposter.',
-    iconName: 'UserCheck',
-    badge: 'HIDDEN ROLE',
-    accentColor: 'pink',
-    minPlayers: 3,
-    maxPlayers: 10,
-    supportsAI: true,
-  },
-  guess_player: {
-    id: 'guess_player',
-    title: '👀 GUESS THE PLAYER',
-    subtitle: 'Anonymous Confessions',
-    description: 'Everyone submits an anonymous response. Guess who in the room wrote which confession.',
-    shortDescription: 'Match confessions to players.',
-    iconName: 'Eye',
-    badge: 'ANONYMOUS REVEAL',
-    accentColor: 'indigo',
-    minPlayers: 2,
-    maxPlayers: 10,
-    supportsAI: true,
-  },
-  chain_reaction: {
-    id: 'chain_reaction',
-    title: '🧨 CHAIN REACTION',
-    subtitle: 'Collaborative Story Mayhem',
-    description: 'Each player adds one chaotic sentence to build a wild squad story before Chaos AI writes the ending.',
-    shortDescription: 'Build a chaotic story.',
-    iconName: 'Flame',
-    badge: 'STORY BUILDER',
-    accentColor: 'amber',
-    minPlayers: 2,
-    maxPlayers: 10,
-    supportsAI: true,
-  },
   two_truths: {
     id: 'two_truths',
     title: '🃏 TWO TRUTHS, ONE CHAOS',
     subtitle: '3 Statements, 1 Fake',
     description: 'A player shares 3 wild statements. Two are true, one is pure fiction. Find the chaos.',
-    shortDescription: 'Find the one fake statement.',
+    shortDescription: 'Find the fake statement.',
     iconName: 'HelpCircle',
     badge: 'TRIVIA & LIES',
     accentColor: 'emerald',
-    minPlayers: 2,
-    maxPlayers: 10,
-    supportsAI: true,
-  },
-  caption_chaos: {
-    id: 'caption_chaos',
-    title: '📸 CAPTION CHAOS',
-    subtitle: 'Meme & Situation Captions',
-    description: 'Get a chaotic real-life scenario and write the funniest caption. Group votes for the crown.',
-    shortDescription: 'Write the funniest caption.',
-    iconName: 'Camera',
-    badge: 'MEME JURY',
-    accentColor: 'cyan',
     minPlayers: 2,
     maxPlayers: 10,
     supportsAI: true,

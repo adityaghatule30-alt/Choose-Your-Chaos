@@ -1,66 +1,4 @@
 export const GAME_PROMPTS = {
-  worst_answer: [
-    { id: 'wa-1', prompt: "Your aunt asks at a family function: 'Beta, salary kitni hai?'" },
-    { id: 'wa-2', prompt: "Your professor announces a surprise viva and asks why your attendance is 48%." },
-    { id: 'wa-3', prompt: "Your friend sends 'bro urgent' on WhatsApp and then asks to borrow ₹47 on UPI." },
-    { id: 'wa-4', prompt: "Your mom walks in on you eating midnight Maggi at 3:15 AM during exam week." },
-    { id: 'wa-5', prompt: "You accidentally send a gossip screenshot back to the exact person you were gossiping about." },
-    { id: 'wa-6', prompt: "Your landlord knocks on Sunday morning asking why 6 people are sleeping in a 1BHK." },
-    { id: 'wa-7', prompt: "Your date asks: 'So, who was that person in your Close Friends story yesterday?'" },
-    { id: 'wa-8', prompt: "The auto driver refuses to go by meter and demands ₹250 for 1 kilometer." },
-    { id: 'wa-9', prompt: "Your dad checks your bank statement and sees 14 consecutive ₹40 UPI chai transactions." },
-    { id: 'wa-10', prompt: "Your roommate ate your leftover biryani and says, 'Bro, I thought it was public property.'" },
-  ],
-  imposter: [
-    {
-      id: 'imp-1',
-      crewPrompt: "Name an item you always carry into a strict college exam hall 📝",
-      imposterPrompt: "Name an item you pack for a late-night street food run 🥘",
-    },
-    {
-      id: 'imp-2',
-      crewPrompt: "What is something you order at a roadside chai tapri? ☕",
-      imposterPrompt: "What is something you order at a fancy wedding buffet? 🍨",
-    },
-    {
-      id: 'imp-3',
-      crewPrompt: "Describe an excuse you give your parents for reaching home after midnight 🌙",
-      imposterPrompt: "Describe an excuse you give your manager for missing Monday standup 💼",
-    },
-    {
-      id: 'imp-4',
-      crewPrompt: "Name something you hide in your hostel room before sudden inspection 🛏️",
-      imposterPrompt: "Name something you pack in your suitcase for a 3-day family trip 🧳",
-    },
-    {
-      id: 'imp-5',
-      crewPrompt: "What is your immediate reaction when UPI payment fails at a crowded counter? 📱",
-      imposterPrompt: "What is your immediate reaction when you get stuck in a crowded metro door? 🚇",
-    },
-    {
-      id: 'imp-6',
-      crewPrompt: "Name a food item you split with friends when everyone is broke 🍜",
-      imposterPrompt: "Name a luxury dish you order on the first day of the month 🍗",
-    },
-  ],
-  guess_player: [
-    { id: 'gp-1', prompt: "Who in this squad would survive an entire week with just ₹300 in their account?" },
-    { id: 'gp-2', prompt: "Who is most likely to say 'I have zero attendance' and still manage to clear the exam?" },
-    { id: 'gp-3', prompt: "Who would secretly order Swiggy after telling everyone in the group they are saving money?" },
-    { id: 'gp-4', prompt: "Who would get caught first by their parents sneaking back into the house late at night?" },
-    { id: 'gp-5', prompt: "Who has the most chaotic, unread WhatsApp notification count right now?" },
-    { id: 'gp-6', prompt: "Who is most likely to cancel a planned road trip 30 minutes before leaving?" },
-    { id: 'gp-7', prompt: "Who would accidentally unmute their mic while gossiping about the professor?" },
-    { id: 'gp-8', prompt: "Who stalks their crush's Instagram profile from a burner account?" },
-  ],
-  chain_reaction: [
-    { id: 'cr-1', starter: "The college fest DJ abruptly stopped the music, grabbed the microphone, and yelled..." },
-    { id: 'cr-2', starter: "Someone accidentally forwarded the squad gossip screenshot directly into the family WhatsApp group..." },
-    { id: 'cr-3', starter: "The entire college hostel lost Wi-Fi exactly 20 minutes before the midnight assignment submission deadline..." },
-    { id: 'cr-4', starter: "The professor entered the exam hall, locked the door, and announced everyone's phone had to be placed on his desk..." },
-    { id: 'cr-5', starter: "We were stuck in traffic for 2 hours when the auto driver turned around and asked for relationship advice..." },
-    { id: 'cr-6', starter: "During the wedding dinner, the groom's best friend took the microphone and made an unexpected confession..." },
-  ],
   two_truths: [
     {
       id: 'tt-1',
@@ -102,16 +40,6 @@ export const GAME_PROMPTS = {
       ],
       fakeIndex: 1,
     },
-  ],
-  caption_chaos: [
-    { id: 'cc-1', prompt: "When the professor says 'Let me ask someone from the last bench' and looks directly at you." },
-    { id: 'cc-2', prompt: "Your face when your UPI payment is stuck on 'Processing' with 8 people waiting behind you in line." },
-    { id: 'cc-3', prompt: "When you check your bank balance on the 24th of the month and see ₹18.50 remaining." },
-    { id: 'cc-4', prompt: "The look you exchange with your friend when your parents ask: 'Who was that person with you yesterday?'" },
-    { id: 'cc-5', prompt: "When the class group admin types 'We need to discuss something serious' at 11:45 PM." },
-    { id: 'cc-6', prompt: "Walking out of the exam hall knowing you answered Question 1 with pure fiction and confidence." },
-    { id: 'cc-7', prompt: "When your roommate opens a fresh pack of chips and says, 'Bro, you want one?'" },
-    { id: 'cc-8', prompt: "When you accidentally play an Instagram reel at full volume in a dead silent college library." },
   ],
   mind_reader: [
     { id: 'mr-1', prompt: "Your friend owes you ₹150 for chai and snacks. How do you handle it?" },

@@ -1,4 +1,4 @@
-﻿import { NextResponse } from 'next/server'
+import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { generateMatchResultReaction } from '@/lib/services/chaos-ai'
 
@@ -47,7 +47,6 @@ export async function GET(request: Request) {
       .eq('room_id', room.id)
       .order('round_number', { ascending: true })
 
-    let sameBrainMatches = 0
     const pickForMeStatsMap: Record<string, { correct: number; total: number }> = {}
 
     if (members) {
@@ -59,24 +58,18 @@ export async function GET(request: Request) {
     if (rounds) {
       for (const r of rounds) {
         const answers = (r.room_answers as any) || []
-        if (answers.length >= 2) {
-          if (room.game_mode === 'same_brain') {
-            if (answers[0].answer === answers[1].answer) {
-              sameBrainMatches += 1
-            }
-          } else if (room.game_mode === 'pick_for_me') {
-            const targetAns = answers.find((a: any) => a.user_id === r.target_user_id)?.answer
-            const predictorRecord = answers.find((a: any) => a.user_id !== r.target_user_id)
+        if (answers.length >= 2 && room.game_mode === 'pick_for_me') {
+          const targetAns = answers.find((a: any) => a.user_id === r.target_user_id)?.answer
+          const predictorRecord = answers.find((a: any) => a.user_id !== r.target_user_id)
 
-            if (predictorRecord && targetAns) {
-              const pId = predictorRecord.user_id
-              if (!pickForMeStatsMap[pId]) {
-                pickForMeStatsMap[pId] = { correct: 0, total: 0 }
-              }
-              pickForMeStatsMap[pId].total += 1
-              if (predictorRecord.answer === targetAns) {
-                pickForMeStatsMap[pId].correct += 1
-              }
+          if (predictorRecord && targetAns) {
+            const pId = predictorRecord.user_id
+            if (!pickForMeStatsMap[pId]) {
+              pickForMeStatsMap[pId] = { correct: 0, total: 0 }
+            }
+            pickForMeStatsMap[pId].total += 1
+            if (predictorRecord.answer === targetAns) {
+              pickForMeStatsMap[pId].correct += 1
             }
           }
         }
@@ -94,7 +87,6 @@ export async function GET(request: Request) {
     const reaction = await generateMatchResultReaction({
       gameMode: room.game_mode,
       totalRounds: room.total_rounds || 10,
-      sameBrainMatches,
       pickForMeStats,
       playerScores,
     })
@@ -103,7 +95,6 @@ export async function GET(request: Request) {
       success: true,
       gameMode: room.game_mode,
       totalRounds: room.total_rounds,
-      sameBrainMatches,
       pickForMeStats,
       reaction,
     })

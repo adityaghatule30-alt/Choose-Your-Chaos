@@ -10,24 +10,16 @@ import {
   ArrowLeft,
   Play,
   Sparkles,
-  Skull,
   UserCheck,
-  Eye,
-  Flame,
   HelpCircle,
-  Camera,
   Check,
 } from 'lucide-react'
 
 const ICONS_MAP: Record<string, any> = {
+  UserCheck,
   Play,
   Sparkles,
-  Skull,
-  UserCheck,
-  Eye,
-  Flame,
   HelpCircle,
-  Camera,
 }
 
 export default function CreateRoomPage() {
