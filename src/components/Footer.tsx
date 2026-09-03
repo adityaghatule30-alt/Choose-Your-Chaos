@@ -50,14 +50,14 @@ export function Footer() {
             <Zap className="w-3.5 h-3.5 fill-current" /> THE CHAOS CREW
           </div>
           <p className="text-xs text-neutral-400 font-medium">
-            Built by <span className="text-white font-bold">Aditya</span> & a suspiciously overpowered AI team.
+            Built by <span className="text-white font-bold">Adrix</span> & a suspiciously overpowered AI team.
           </p>
         </div>
 
         <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-8 gap-3 max-w-5xl mx-auto text-left">
           <div className="bg-neutral-900/60 border border-neutral-850 hover:border-yellow-400/40 p-3 rounded-2xl transition-all duration-200 active-press shadow-sm hover:scale-[1.02]">
             <div className="text-sm font-black text-white flex items-center gap-1">
-              👑 Aditya
+              👑 Adrix
             </div>
             <div className="text-[10px] text-neutral-500 font-medium mt-0.5">Founder / Dev</div>
           </div>
@@ -117,9 +117,12 @@ export function Footer() {
         </div>
       </div>
 
-      {/* Copyright */}
-      <div className="max-w-6xl mx-auto mt-6 pt-6 border-t border-neutral-900 text-center text-[11px] text-neutral-600 flex items-center justify-center gap-1">
+      {/* Copyright & Developed by Adrix */}
+      <div className="max-w-6xl mx-auto mt-6 pt-6 border-t border-neutral-900 text-center text-xs text-neutral-500 flex flex-col sm:flex-row items-center justify-between gap-2">
         <span>© {currentYear} Choose Your Chaos. Built for multiplayer glory and unfiltered laughs.</span>
+        <span className="flex items-center gap-1 font-bold text-neutral-400">
+          Developed by <span className="text-white font-black hover:text-yellow-400 transition-colors">Adrix</span>
+        </span>
       </div>
     </footer>
   )
